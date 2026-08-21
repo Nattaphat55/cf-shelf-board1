@@ -139,9 +139,34 @@
   .theme-D{--hdr:#5a4a1a;--occ:#f8f5ee;--dot:#5a4a1a}
   .theme-E{--hdr:#3a2c5a;--occ:#f3eef8;--dot:#3a2c5a}
 
+  /* =========================================================
+     VIEW 3 — แผนที่ตำแหน่งชั้นวาง
+     ========================================================= */
+  .map-board{background:#fff;width:920px;max-width:98vw;border:3px solid #222;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+  .map-header{background:#222;color:#fff;padding:18px 24px}
+  .map-header h2{font-size:22px;letter-spacing:.5px}
+  .map-header p{font-size:15px;opacity:.65;margin-top:4px}
+  .site-map{display:block;width:100%;height:auto}
+  .map-shelf{cursor:pointer;stroke:#111;stroke-width:2}
+  .map-shelf:hover{opacity:.85}
+  .map-shelf:focus-visible{outline:3px solid #c1560a;outline-offset:2px}
+  .map-shelf.bg-A{fill:#1a3a5c}
+  .map-shelf.bg-B{fill:#5c1a3a}
+  .map-shelf.bg-C{fill:#2c5a3a}
+  .map-shelf.bg-D{fill:#5a4a1a}
+  .map-shelf.bg-E{fill:#3a2c5a}
+  .map-shelf-label{font-size:30px;font-weight:700;fill:#fff;text-anchor:middle;font-family:var(--font-th);pointer-events:none}
+  .map-lab-label{font-size:26px;font-weight:700;fill:#fff;text-anchor:middle;font-family:var(--font-th)}
+  .map-door-label{font-size:14px;fill:#666;text-anchor:middle;font-family:var(--font-th)}
+  .map-aisle-label{font-size:14px;fill:#888;text-anchor:middle;font-family:var(--font-th)}
+  .map-lock-box{fill:#fff;stroke:#333;stroke-width:1.5}
+  .map-lock-num{font-size:20px;font-weight:700;fill:#222;text-anchor:middle;font-family:var(--font-mono)}
+  .map-lock-caption{font-size:12px;fill:#888;text-anchor:middle;font-family:var(--font-th)}
+  .map-legend{padding:14px 24px;border-top:1px solid #ddd;background:#f9f9f9;font-size:14px;color:#777}
+
   @media print{
     .masterTabs{display:none}
-    #view-board:not(.active), #view-signs:not(.active){display:none}
+    #view-board:not(.active), #view-signs:not(.active), #view-map:not(.active){display:none}
   }
 </style>
 
@@ -151,6 +176,7 @@
     <div class="masterTabs">
       <button class="masterTab active" data-view="board" id="mtab-board">📋 ป้ายรวม — ค้นหาตำแหน่ง</button>
       <button class="masterTab" data-view="signs" id="mtab-signs">🏷️ ป้ายตำแหน่ง — ติดหน้าชั้นวาง</button>
+      <button class="masterTab" data-view="map" id="mtab-map">🗺️ แผนที่ — ตำแหน่งชั้นวาง</button>
     </div>
     <div class="qr-chip">
       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0AQMAAADxGE3JAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAACeklEQVR4nO3csXHzMAyGYfhcpPQIGkWjWaNpFI2Q0oUvjEAQJCQ5uXQ5me9XJH9MPvw7HEFRFiHkPzOmmEf+7JKSiP455QnL+vOWB6+byWnG4/En97N4PvKUp3nNPU9bNoM1dzwej5chT/vMU2q8+qgf1kFNWVyDx+Pfz199OJXo8LLuPx54PB7/u9dJXxIy+kJtc4LH49/He7x+fLXqkfLwUIvLH/oXPB7fj48J5xfav+iUsfQvYXMSl8bj8ef1x9QORGp5Gcrifwoej+/Fj8mjJcaS9x+6wZjylKE+AXnm5qaWJzwef27/Kj/cn0htec39h/0HHo/vxfv5pz4g1frzdG9TNEtZ9qMM7o5H8Xh8vz6VAhNXkHb+YbH7m6G5ifsfPB5/Zj8kz9OmxCcgOuFWTi9K/+IFBo/H9+w1rh+x/rT/wJZv1efQ/+Dx+PN6z+ER6VSPRz9jc6KRF8Hj8X15v3/VGpRcf3yCeq0/7sv1rNi/4PH483ovEP6KePEWXXxI28vdh/4Fj8f36ud1wuJ/Sri/6SVmyCtZc6Op1zNmPB7/Fv5WJoXc80e+vOvqLXg8vm8vuUER8eendYOhJWbc9C/1/sS2/8Hj8f16CfrwktjL+mNDeDz+zH6fcH4x5Q/G6mxzcolL4/H4nn0btimbt0fb8xMfDN9fI7vl8Xj8+fzs/xR/xJHs/DPe3/bB0H+82r/g8fjevJWX9hU19YKmTXrZv+zfH8Xj8e/g6xZjKueXNthSOxA8Ho/f+xxbwbS9/9UqUFle8Hj86b0n1I/62TphEf/+GVv64u0JHo/v3ceE80/7rYsPZUhz9dOLtjwej+/VE/J/+QZJwLb5mewEBgAAAABJRU5ErkJggg==" alt="QR code เปิดหน้าเว็บป้าย C/F" width="64" height="64">
@@ -204,6 +230,74 @@
     </div>
     <div class="tabs" id="tabs"></div>
     <div id="signs"></div>
+  </div>
+
+  <!-- =========================================================
+       VIEW 3 — แผนที่ตำแหน่งชั้นวาง
+       ========================================================= -->
+  <div id="view-map" class="cf-view">
+    <div class="map-board">
+      <div class="map-header">
+        <h2>🗺️ แผนผังพื้นที่จัดเก็บ C/F</h2>
+        <p>มุมมองจากด้านบน (Top View) — คลิกที่กล่องชั้นวางเพื่อเปิดป้ายตำแหน่งของชั้นนั้น</p>
+      </div>
+      <svg class="site-map" viewBox="0 0 920 650" role="img" aria-label="ผังตำแหน่งชั้นวาง C/F เทียบกับห้อง Lab">
+        <defs>
+          <marker id="mapArrow" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+            <path d="M0,0 L9,4.5 L0,9 Z" fill="#333"/>
+          </marker>
+        </defs>
+
+        <!-- Lab room -->
+        <rect x="15" y="25" width="320" height="270" fill="#111"/>
+        <text x="175" y="172" class="map-lab-label">Lab</text>
+        <!-- doors on the lower edge of Lab -->
+        <rect x="65" y="291" width="55" height="9" fill="#c1560a"/>
+        <rect x="225" y="291" width="55" height="9" fill="#c1560a"/>
+        <text x="92" y="318" class="map-door-label">ประตู</text>
+        <text x="252" y="318" class="map-door-label">ประตู</text>
+
+        <!-- Shelf E -->
+        <rect class="map-shelf bg-E" x="360" y="25" width="85" height="270" tabindex="0" role="button" aria-label="เปิดป้ายชั้นวาง E" onclick="goToShelf('E')" onkeypress="if(event.key==='Enter')goToShelf('E')"/>
+        <text x="402" y="172" class="map-shelf-label">E</text>
+
+        <!-- Shelf D + C (adjoining) -->
+        <rect class="map-shelf bg-D" x="465" y="25" width="86" height="270" tabindex="0" role="button" aria-label="เปิดป้ายชั้นวาง D" onclick="goToShelf('D')" onkeypress="if(event.key==='Enter')goToShelf('D')"/>
+        <text x="508" y="172" class="map-shelf-label">D</text>
+        <rect class="map-shelf bg-C" x="551" y="25" width="89" height="270" tabindex="0" role="button" aria-label="เปิดป้ายชั้นวาง C" onclick="goToShelf('C')" onkeypress="if(event.key==='Enter')goToShelf('C')"/>
+        <text x="595" y="172" class="map-shelf-label">C</text>
+
+        <!-- Shelf B -->
+        <rect class="map-shelf bg-B" x="685" y="25" width="85" height="270" tabindex="0" role="button" aria-label="เปิดป้ายชั้นวาง B" onclick="goToShelf('B')" onkeypress="if(event.key==='Enter')goToShelf('B')"/>
+        <text x="727" y="172" class="map-shelf-label">B</text>
+
+        <!-- B/C/D/E lock direction legend: 1 (near aisle) -> 4 (far) -->
+        <rect class="map-lock-box" x="795" y="245" width="85" height="45"/>
+        <text x="837" y="274" class="map-lock-num">1</text>
+        <rect class="map-lock-box" x="795" y="25" width="85" height="45"/>
+        <text x="837" y="54" class="map-lock-num">4</text>
+        <line x1="837" y1="240" x2="837" y2="76" stroke="#333" stroke-width="2" marker-end="url(#mapArrow)"/>
+        <text x="837" y="160" class="map-lock-caption">Lock B/C/D/E</text>
+
+        <!-- Aisle -->
+        <text x="727" y="315" class="map-aisle-label">↕ ทางเดิน</text>
+
+        <!-- Shelf A -->
+        <rect class="map-shelf bg-A" x="685" y="330" width="85" height="270" tabindex="0" role="button" aria-label="เปิดป้ายชั้นวาง A" onclick="goToShelf('A')" onkeypress="if(event.key==='Enter')goToShelf('A')"/>
+        <text x="727" y="477" class="map-shelf-label">A</text>
+
+        <!-- A lock direction legend: 1 (near aisle) -> 3 (far) reversed -->
+        <rect class="map-lock-box" x="795" y="330" width="85" height="45"/>
+        <text x="837" y="359" class="map-lock-num">1</text>
+        <rect class="map-lock-box" x="795" y="555" width="85" height="45"/>
+        <text x="837" y="584" class="map-lock-num">3</text>
+        <line x1="837" y1="381" x2="837" y2="549" stroke="#333" stroke-width="2" marker-end="url(#mapArrow)"/>
+        <text x="837" y="465" class="map-lock-caption">Lock A</text>
+      </svg>
+      <div class="map-legend">
+        หมายเหตุ: ชั้น B/C/D/E เป็นรางเลื่อน เลื่อนเข้า-ออกได้ในแนวตั้ง 1-5 ของแต่ละชั้นเพื่อหยิบ C/F • ทิศทางเลข Lock ของ A สวนทางกับ B/C/D/E
+      </div>
+    </div>
   </div>
 
 </div>
@@ -759,6 +853,14 @@
 /* =========================================================
    MASTER (outer) tab switcher
    ========================================================= */
+window.goToShelf = function(letter){
+  document.getElementById('mtab-signs').click();
+  var tabs = document.querySelectorAll('#tabs .tab');
+  for (var i = 0; i < tabs.length; i++){
+    if (tabs[i].textContent === 'ชั้น ' + letter){ tabs[i].click(); break; }
+  }
+};
+
 document.querySelectorAll('.masterTab').forEach(function(btn){
   btn.addEventListener('click', function(){
     document.querySelectorAll('.masterTab').forEach(function(b){ b.classList.remove('active'); });
