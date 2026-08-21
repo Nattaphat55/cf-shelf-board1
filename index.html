@@ -1,0 +1,773 @@
+<title>ป้าย C/F — ค้นหาตำแหน่ง &amp; ติดหน้าชั้นวาง</title>
+<style>
+  :root{
+    --font-th:'Leelawadee UI','Tahoma','Segoe UI',sans-serif;
+    --font-mono:'Consolas','Courier New',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#d0d0d0;font-family:var(--font-th);padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .mono{font-family:var(--font-mono)}
+
+  /* ===== master (outer) tab switcher ===== */
+  .top-row{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap}
+
+  .qr-chip{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid #222;border-radius:8px;padding:8px 14px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+  .qr-chip img{display:block;width:64px;height:64px;border-radius:3px}
+  .qr-label{font-size:11px;font-weight:700;color:#222;letter-spacing:.2px}
+  .qr-url{font-size:9px;color:#777;margin-top:3px;max-width:170px;word-break:break-all;font-family:var(--font-mono)}
+
+  .masterTabs{display:flex;gap:6px;background:#222;padding:6px;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+  .masterTab{
+    appearance:none;border:0;background:transparent;color:#aaa;font-family:inherit;
+    font-size:13px;font-weight:700;letter-spacing:.3px;padding:10px 18px;border-radius:5px;cursor:pointer;
+  }
+  .masterTab:hover{color:#fff}
+  .masterTab.active{background:#fff;color:#222}
+  .masterTab:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+  .cf-view{display:none;width:100%;flex-direction:column;align-items:center;gap:16px}
+  .cf-view.active{display:flex}
+
+  /* =========================================================
+     VIEW 1 — ป้ายรวม C/F (ค้นหาตำแหน่ง)
+     ========================================================= */
+  .board{background:#fff;width:920px;max-width:98vw;border:3px solid #222;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+
+  .board-header{background:#222;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+  .board-header h1{font-size:26px;letter-spacing:2px}
+  .board-header .sub{font-size:12px;opacity:.6;margin-top:2px}
+  .board-header .right{text-align:right;font-size:11px;opacity:.5}
+
+  .shelf-colors{display:flex;gap:6px;padding:10px 24px;background:#f5f5f5;border-bottom:2px solid #ddd;flex-wrap:wrap;align-items:center}
+  .shelf-colors .label{font-size:11px;color:#666;font-weight:600;margin-right:4px}
+  .shelf-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:4px;font-weight:700;font-size:13px;color:#fff;letter-spacing:1px}
+
+  #view-board .search-bar{padding:12px 24px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center}
+  #view-board .search-bar input{flex:1;padding:8px 14px;border:2px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;outline:none;transition:border .15s}
+  #view-board .search-bar input:focus{border-color:#222}
+  #view-board .search-bar .hint{font-size:10px;color:#999;white-space:nowrap}
+
+  .content{padding:0 16px 16px;max-height:70vh;overflow-y:auto}
+  .model-section{margin-top:12px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden}
+  .model-header{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f8f8f8;border-bottom:1px solid #e0e0e0}
+  .model-header .model-name{font-size:16px;font-weight:700;letter-spacing:.5px}
+  .model-header .count{font-size:11px;color:#888;margin-left:auto}
+  .model-header .shelves-used{display:flex;gap:4px}
+  .mini-badge{padding:2px 8px;border-radius:3px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px}
+
+  table.parts-tbl{width:100%;border-collapse:collapse}
+  table.parts-tbl th{background:#fafafa;text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600;border-bottom:1px solid #eee;position:sticky;top:0}
+  table.parts-tbl td{padding:4px 10px;font-size:11px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+  table.parts-tbl tr:hover{background:#f8f8f8}
+  .col-shelf{width:60px;text-align:center}
+  .col-loc{width:70px;text-align:center}
+  .col-pn{font-weight:600;color:#111}
+  .col-po{color:#555}
+  .shelf-dot{display:inline-block;padding:2px 10px;border-radius:3px;font-weight:700;color:#fff;font-size:11px;letter-spacing:.5px}
+  .loc-code{font-weight:700;font-size:11px;letter-spacing:.5px}
+
+  .board-footer{background:#f5f5f5;border-top:2px solid #ddd;padding:8px 24px;font-size:10px;color:#999;display:flex;justify-content:space-between}
+
+  .bg-A{background:#1a3a5c} .c-A{color:#1a3a5c}
+  .bg-B{background:#5c1a3a} .c-B{color:#5c1a3a}
+  .bg-C{background:#2c5a3a} .c-C{color:#2c5a3a}
+  .bg-D{background:#5a4a1a} .c-D{color:#5a4a1a}
+  .bg-E{background:#3a2c5a} .c-E{color:#3a2c5a}
+
+  /* =========================================================
+     VIEW 2 — ป้ายตำแหน่ง C/F (ติดหน้าชั้นวาง)
+     ========================================================= */
+  #view-signs .tabs{display:flex;gap:4px;flex-wrap:wrap}
+  #view-signs .tab{padding:10px 28px;border:none;font-size:15px;font-weight:700;cursor:pointer;border-radius:8px 8px 0 0;transition:all .15s;font-family:inherit;letter-spacing:1px}
+  #view-signs .tab.active{color:#fff}
+
+  .sign{background:#fff;width:900px;max-width:98vw;border:3px solid #222;display:none;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+  .sign.active{display:block}
+
+  .sign-header{padding:16px 24px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+  .shelf-name{font-size:32px;font-weight:700;letter-spacing:3px}
+  .shelf-sub{font-size:12px;opacity:.7;margin-top:2px}
+  .update-box{text-align:right;font-size:11px;opacity:.7}
+
+  .lookup{padding:12px 16px 8px;border-bottom:2px solid #ddd}
+  .lookup h3{font-size:13px;margin-bottom:8px;color:#444;letter-spacing:.5px}
+  .lookup-scroll{max-height:220px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:4px}
+  .model-group{margin-bottom:0}
+  .model-label{background:#f0f0f0;padding:4px 10px;font-weight:700;font-size:11px;color:#333;position:sticky;top:0;z-index:1;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:6px}
+  .model-label .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .model-items{font-size:10px}
+  .model-items tr{border-bottom:1px solid #f0f0f0}
+  .model-items tr:hover{background:#f8f8f8}
+  .model-items td{padding:3px 8px;vertical-align:middle}
+  .model-items .pname{font-weight:600;color:#222;max-width:200px}
+  .model-items .pno{color:#555}
+  .model-items .loc{font-weight:600;white-space:nowrap}
+  table.lookup-tbl{width:100%;border-collapse:collapse}
+
+  .grid-section{padding:12px 16px 16px}
+  .grid-section h3{font-size:13px;margin-bottom:8px;color:#444;letter-spacing:.5px}
+
+  .lock-hdr{display:flex}
+  .lock-hdr .lh-spacer{width:48px;min-width:48px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700}
+  .lock-hdr .lh-slots{display:flex;flex:1}
+  .lock-hdr .lh-slot{flex:1;text-align:center;padding:5px 0;font-weight:700;font-size:11px;border-right:1px dashed #ccc;letter-spacing:1px}
+  .lock-hdr .lh-slot:last-child{border-right:none}
+
+  .level-row{display:flex;border-bottom:3px solid #8B6914;min-height:0}
+  .level-label{width:48px;min-width:48px;background:#f0e6c8;border-right:2px solid #8B6914;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;color:#5a4510;font-size:10px;gap:1px;padding:4px 0}
+  .level-label .num{font-size:20px;line-height:1}
+  .level-slots{display:flex;flex:1}
+
+  .slot{flex:1;border-right:1px dashed #ccc;padding:4px 6px;display:flex;flex-direction:column;justify-content:center;min-height:0;position:relative}
+  .slot:last-child{border-right:none}
+  .slot.occupied{min-height:40px}
+  .slot.empty{background:#fafafa;min-height:28px}
+  .slot-addr{position:absolute;top:2px;right:4px;font-size:8px;color:#aaa}
+  .slot .pn{font-size:9px;font-weight:700;color:#111;line-height:1.2;margin-bottom:1px}
+  .slot .po{font-size:8px;color:#336;margin-bottom:1px}
+  .slot .md{font-size:8px;color:#666}
+  .slot .md span{background:#e8e8e8;padding:0 3px;border-radius:2px;font-weight:600}
+  .slot.empty::after{content:'—';font-size:9px;color:#ccc;text-align:center;display:block}
+
+  .sign-footer{background:#f9f9f9;border-top:1px solid #ddd;padding:6px 16px;display:flex;justify-content:space-between;font-size:9px;color:#999}
+  .legend{display:flex;gap:12px;align-items:center}
+  .legend .sw{width:12px;height:12px;border:1px solid #ccc;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:3px}
+
+  .theme-A{--hdr:#1a3a5c;--occ:#eef3f8;--dot:#1a3a5c}
+  .theme-B{--hdr:#5c1a3a;--occ:#f8eef3;--dot:#5c1a3a}
+  .theme-C{--hdr:#2c5a3a;--occ:#eef8f0;--dot:#2c5a3a}
+  .theme-D{--hdr:#5a4a1a;--occ:#f8f5ee;--dot:#5a4a1a}
+  .theme-E{--hdr:#3a2c5a;--occ:#f3eef8;--dot:#3a2c5a}
+
+  @media print{
+    .masterTabs{display:none}
+    #view-board:not(.active), #view-signs:not(.active){display:none}
+  }
+</style>
+
+<div class="cf-app">
+
+  <div class="top-row">
+    <div class="masterTabs">
+      <button class="masterTab active" data-view="board" id="mtab-board">📋 ป้ายรวม — ค้นหาตำแหน่ง</button>
+      <button class="masterTab" data-view="signs" id="mtab-signs">🏷️ ป้ายตำแหน่ง — ติดหน้าชั้นวาง</button>
+    </div>
+    <div class="qr-chip">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0AQMAAADxGE3JAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAC0klEQVR4nO3cS5LiMAyAYVG9YMkR5ig5WnK0HKWPwJIFFU1iWbId6OoaQo1Z/Fo5xp9ZOX4JRAiiZwxaYkk1f3SW9eGWHkbVu1zWx7Vu+/hSNV/r8Hj8MS8e4yJfek1eTqu/rIVUp/rt7S4Jxffg8fjO/pQH87hEVzHWp+3DfZ9a6vB4/Nv8Vy6WudbGdJ6n8Xj8B/sNfdsr4KzazrW5Tzwe/07vUa111abiNGjv2cf8W/WJx+P7+hJl/7oWz2tx2NbP9/ROSO+Jm/xyfoXH4//F78Ma5Ifst7Gq+qQxHo/v6mP853VxddYrNhH7/lVk/07A4/HHfIpcbw/NXlV8/NZ1EudMeDy+r1fLdcgvAj9XSudPWsa/2P419rRl/OPx+M4+xvXV69SKp5y/pBp1Y9UnHo8/4OP+JkWTKyg2Jz+sn9XOhPF4/Af4Kuz+JsXZxrrf36hq5DRJLsx4PP6gT5Hbah6r+f5Gyv5Vd/m7u/MrPB7fxce+dCoTsUQ0+b/qy+bd+hmPx7/kq/3rqE+81F3l86MmzxCPx/f2EVav1ZmUR3un4+tnPB7/uh9srZvyH5ayf/WcfKnyB/1OZtrlT+Dx+G5eqrx692rjX0tOsJbvkSfrbzwe/4KvYtQcs5S2Zaymj66P6188Ht/LD36uq3ZXqqXfqMvjP9bU7foZj8d39H4uPFrSQ2obvxVfcmf1Pe3D+hmPxx/xW0xWqPaqc3N/s6sTPB7/Cf6WCur5g3F/MzR9xvWsvydmPB5/yLcR/z/mMVVrXfueyL/H4/G9/aAlqvpT7S20ypNo7n/wePzLXjzGMq9qkxOxqxv9+2Y8Ht/be65DNa9qlX+/xbP1swUej3+ft2KKuGuRMifn38lEHR6P/yAfuUr5/tTPf1M8/M8DHo8/6D1i/Gq5fxnrsfrD/Qsej+/mS3j+ffQ5+H8KbhHNUt1P51d4PP7/eYLoF38B+c6ugSbOGlgAAAAASUVORK5CYII=" alt="QR code เปิดหน้าเว็บป้าย C/F" width="64" height="64">
+      <div>
+        <div class="qr-label">สแกนเพื่อเปิดดู</div>
+        <div class="qr-url mono">claude.ai/code/artifact/6bd20932…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       VIEW 1 — ป้ายรวม C/F (ค้นหาตำแหน่ง)
+       ========================================================= -->
+  <div id="view-board" class="cf-view active">
+    <div class="board">
+      <div class="board-header">
+        <div>
+          <h1>📋 ป้ายรวม C/F — ค้นหาตำแหน่ง</h1>
+          <div class="sub">ค้น Model หรือ Part Name → ดูว่าต้องไปชั้นวางไหน → เดินไปหยิบ</div>
+        </div>
+        <div class="right">อัปเดต: ___/___/______</div>
+      </div>
+
+      <div class="shelf-colors">
+        <span class="label">ชั้นวาง:</span>
+        <span class="shelf-badge bg-A">A</span>
+        <span class="shelf-badge bg-B">B</span>
+        <span class="shelf-badge bg-C">C</span>
+        <span class="shelf-badge bg-D">D</span>
+        <span class="shelf-badge bg-E">E</span>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="พิมพ์ Model หรือ Part Name เช่น 5F00, MY26, PANEL..." oninput="filterAll()">
+        <span class="hint">กรองแบบ real-time</span>
+      </div>
+
+      <div class="content" id="content"></div>
+
+      <div class="board-footer">
+        <div>ป้ายนี้ติดที่ทางเข้า / จุดกลางพื้นที่จัดเก็บ</div>
+        <div class="mono">รหัส: ชั้นวาง - ชั้นที่ - ล็อก</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       VIEW 2 — ป้ายตำแหน่ง C/F (ติดหน้าชั้นวาง)
+       ========================================================= -->
+  <div id="view-signs" class="cf-view">
+    <div style="text-align:center;margin-bottom:8px">
+      <div style="font-size:16px;font-weight:700;color:#444;letter-spacing:2px">ป้ายตำแหน่ง C/F — ติดหน้าชั้นวาง</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">ส่วนบน: ค้นหาตาม Model → ส่วนล่าง: แผนผังตำแหน่งจริง — รหัส: ชั้นวาง-ชั้นที่-ล็อก</div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="signs"></div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   VIEW 1 SCRIPT — ป้ายรวม C/F (ค้นหาตำแหน่ง)
+   ========================================================= */
+(function(){
+  const COLORS = {A:'#1a3a5c',B:'#5c1a3a',C:'#2c5a3a',D:'#5a4a1a',E:'#3a2c5a'};
+
+  const ALL_ITEMS = [
+    // ===== SHELF A =====
+    {s:'A',pn:'MBR-CROSS. 4TH C/C',po:'75442A010P',md:'5F00',lv:1,lk:1},
+    {s:'A',pn:'MBR-CROSS. 4TH',po:'75442A030P',md:'5F00',lv:1,lk:1},
+    {s:'A',pn:'REINF ASSY-ROPEHOOK RH',po:'933C0A060P',md:'5F00',lv:1,lk:1},
+    {s:'A',pn:'REINF ASSY-ROPEHOOK LH',po:'933C1A060P',md:'5F00',lv:1,lk:1},
+    {s:'A',pn:'BOW ROOF RR RR',po:'5920C907/909',md:'4P45',lv:1,lk:2},
+    {s:'A',pn:'BOW ROOF RR',po:'5290CB76',md:'4P45',lv:1,lk:2},
+    {s:'A',pn:'BOW ROOF CTR',po:'5280C870',md:'4P45',lv:1,lk:2},
+    {s:'A',pn:'C/MBR RR END INR SIDE RH',po:'5257B048',md:'4P45',lv:1,lk:2},
+    {s:'A',pn:'C/MBR RR END INR SIDE LH',po:'5257B047',md:'4P45',lv:1,lk:2},
+    {s:'A',pn:'C/NBR RR END INR CTR',po:'5257A695',md:'4P45',lv:1,lk:3},
+    {s:'A',pn:'EXT-FR FLOOR',po:'74314A010P',md:'5F00',lv:1,lk:3},
+    {s:'A',pn:'BOLS FLOOR FR',po:'93612A070P',md:'5F00',lv:1,lk:3},
+    {s:'A',pn:'REINF RR AIR SPOILER',po:'96044A010P',md:'5F00',lv:1,lk:3},
+    {s:'A',pn:'STPNR RR DR OTR RH',po:'82154 5EK0A',md:'L02D',lv:2,lk:1},
+    {s:'A',pn:'STPNR RR DR OTR LH',po:'82155 5EK0A',md:'L02D',lv:2,lk:1},
+    {s:'A',pn:'REINF PR DR OTR WAIST LH',po:'82149 5EK0A',md:'L02D',lv:2,lk:1},
+    {s:'A',pn:'STFNR -FR DR OTR LH',po:'80155 5EK0A',md:'L02D',lv:2,lk:1},
+    {s:'A',pn:'STFNR -FR DR OTR RH',po:'80154 5EK0A',md:'L02D',lv:2,lk:1},
+    {s:'A',pn:'REINF PR DR OTR WAIST LH',po:'82148 5EK0A',md:'L02D',lv:2,lk:1},
+    {s:'A',pn:'TEMP REINF RR DR HINGE UPR RH',po:'82118 5EK0A',md:'L02D',lv:2,lk:2},
+    {s:'A',pn:'TEMP REINF RR DR HINGE UPR LH',po:'82119 5EK0A',md:'L02D',lv:2,lk:2},
+    {s:'A',pn:'RNF 2ND SEAT SIDE RH',po:'5251A896',md:'CR45',lv:2,lk:2},
+    {s:'A',pn:'RNF 2ND SEAT SIDE LH',po:'5252A897',md:'CR45',lv:2,lk:2},
+    {s:'A',pn:'SILL CROSS 1ST ENTER',po:'6710A161/162',md:'4P00(MMTh)',lv:2,lk:2},
+    {s:'A',pn:'REINF FR DR HINGE LWR RH',po:'80126 5EK0A',md:'L02D',lv:2,lk:2},
+    {s:'A',pn:'REINF FR DR HINGE LWR LH',po:'80127 5EK0A',md:'L02D',lv:2,lk:2},
+    {s:'A',pn:'C/MBR FR FLR FR (RH)',po:'MN136016',md:'-',lv:2,lk:2},
+    {s:'A',pn:'C/MBR FR FLR FR (LH)',po:'MN136015',md:'-',lv:2,lk:2},
+    {s:'A',pn:'C/MBR RR END OTR LH',po:'5250A709',md:'4P45',lv:2,lk:3},
+    {s:'A',pn:'C/MBR RR END OTR RH',po:'5250A710',md:'4P45',lv:2,lk:3},
+    {s:'A',pn:'EXT.QTR INR LWR RR LH',po:'5301G383',md:'4P45',lv:2,lk:3},
+    {s:'A',pn:'EXT.QTR INR LWR RR RH',po:'5301G384',md:'4P45',lv:2,lk:3},
+    {s:'A',pn:'PWE-Body',po:'MN136122',md:'-',lv:2,lk:3},
+    {s:'A',pn:'EXT ASSY SIDE GATE INR RR RH',po:'6722A708/712',md:'19MY',lv:3,lk:1},
+    {s:'A',pn:'HOUSING RR LAMP LH',po:'5281A353',md:'4P00',lv:3,lk:1},
+    {s:'A',pn:'STAY S/SKIRT PANEL RR LH',po:'6748A099/101',md:'4P00',lv:3,lk:1},
+    {s:'A',pn:'REINF SIDE GATE RR RH',po:'6722A658',md:'4P00(19MY)',lv:3,lk:1},
+    {s:'A',pn:'REINF SIDE GATE RR LH',po:'6722A657',md:'4P00(19MY)',lv:3,lk:1},
+    {s:'A',pn:'PANEL SIDE GATE RR LH',po:'6722A269/405',md:'4P00',lv:3,lk:1},
+    {s:'A',pn:'PANEL SIDE GATE RR RH',po:'6722A270/406',md:'4P00',lv:3,lk:1},
+    {s:'A',pn:'EXT ASSY SIDE GATE INR RR LH',po:'6722A707/711',md:'19MY',lv:3,lk:1},
+    {s:'A',pn:'SILLR FLR SIDE INR LH',po:'5253M329',md:'4P00',lv:3,lk:2},
+    {s:'A',pn:'HOUSING RR LAMP RH',po:'5281A354',md:'4P00',lv:3,lk:2},
+    {s:'A',pn:'BOARD RR BODY HEADER',po:'6720A051/083',md:'4P00',lv:3,lk:2},
+    {s:'A',pn:'REINF BACK BONE',po:'MN136061-4',md:'3EOO(KAOT)',lv:3,lk:2},
+    {s:'A',pn:'COVER-ENG RR',po:'74811A000P/010P',md:'5F00',lv:3,lk:3},
+    {s:'A',pn:'RE INF F/DR BELT LINE OTR LH',po:'57008619',md:'4P00',lv:3,lk:3},
+    {s:'A',pn:'RE INF F/DR BELT LINE OTR RH',po:'57008620',md:'4P00',lv:3,lk:3},
+    {s:'A',pn:'STAY S/SKIRT PANEL RR LH',po:'6758A19/6748A221',md:'4P00',lv:4,lk:1},
+    {s:'A',pn:'STAY S/SKIRT PANEL RR RH',po:'6748A220/222',md:'4P00',lv:4,lk:1},
+    {s:'A',pn:'REINF 2ND SEAT CTR',po:'5851A703',md:'CR45',lv:4,lk:1},
+    {s:'A',pn:'REINF SIDE GATE FR LH',po:'6722A681',md:'4P00(19MY)',lv:4,lk:1},
+    {s:'A',pn:'REINF SIDE GATE FR RH',po:'6722A682',md:'4P00(19MY)',lv:4,lk:1},
+    {s:'A',pn:'SILLR FLR SIDE INR RH',po:'5253M330',md:'4P00',lv:4,lk:1},
+    {s:'A',pn:'PNL,RR GATE OTR',po:'ST-57W0490-000',md:'MMTh SU',lv:4,lk:2},
+    {s:'A',pn:'PANEL, ROOF',po:'ST-58Y0190-000',md:'MMTh SU27',lv:4,lk:3},
+    {s:'A',pn:'PANEL SIDE INR LH',po:'93381A010P',md:'MY26',lv:5,lk:1},
+    {s:'A',pn:'PANEL-SIDE, OTR LH',po:'93313A290P',md:'26MY(SWB)',lv:5,lk:2},
+    {s:'A',pn:'PANEL-SIDE, OTR RH',po:'93312A240P',md:'26MY(SWB)',lv:5,lk:3},
+
+    // ===== SHELF B =====
+    {s:'B',pn:'PANEL SIDE INR RH',po:'93381A020P',md:'MY26',lv:5,lk:1},
+    {s:'B',pn:'PANEL,R/DR INR (RH)',po:'ST-62M1290-000',md:'QX MMTH',lv:5,lk:2},
+
+    // ===== SHELF C =====
+    {s:'C',pn:'REINF BACKBONE',po:'74366W010P',md:'4L45V',lv:1,lk:1},
+    {s:'C',pn:'REINF RR FLOOR C/C',po:'745A8A010P',md:'5F00',lv:1,lk:1},
+    {s:'C',pn:'COVER-FR UNDER',po:'50812A000P/50810A010P',md:'5F00',lv:1,lk:1},
+    {s:'C',pn:'COVER-FR UNDER',po:'50812A020P',md:'5F00',lv:1,lk:1},
+    {s:'C',pn:'COVER-RR GATE',po:'6724A021ZZ',md:'-',lv:1,lk:2},
+    {s:'C',pn:'RAIL,ROOF FRONT',po:'5290C480',md:'4P00',lv:1,lk:2},
+    {s:'C',pn:'REINF SUN ROOF',po:'5290D003',md:'4P45',lv:1,lk:2},
+    {s:'C',pn:'REINF HOOD LOCK UPR',po:'5900B048',md:'-',lv:1,lk:3},
+    {s:'C',pn:'REINF,RR/DR HINGE LH/RH',po:'5730B283/284',md:'4P00',lv:1,lk:3},
+    {s:'C',pn:'BOW ROOF CTR RR',po:'5290C906(873)',md:'4P45',lv:1,lk:3},
+    {s:'C',pn:'REINF R DR BELT LINE OTR',po:'5730B279-80',md:'4P47',lv:1,lk:3},
+    {s:'C',pn:'PANEL SIDE GATE INR FR UPR LH',po:'6722A229',md:'4P00',lv:1,lk:4},
+    {s:'C',pn:'REINF RR GATE INR LH',po:'6724A073',md:'4P00',lv:1,lk:4},
+    {s:'C',pn:'REINF RR GATE INR RH',po:'6724A074',md:'4P00',lv:1,lk:4},
+    {s:'C',pn:'RAIL-UPR GUARD FRAME',po:'93114A040P',md:'5F00',lv:2,lk:1},
+    {s:'C',pn:'RENL HEADER PANEL',po:'93114A050P',md:'5F00',lv:2,lk:1},
+    {s:'C',pn:'PANEL RR GATE OTR',po:'93412A810P',md:'5F00',lv:2,lk:1},
+    {s:'C',pn:'REINF RR SEATBELT ANCH(D/C)',po:'76686A020P',md:'5F00',lv:2,lk:1},
+    {s:'C',pn:'C/MBR BACK BONE FR',po:'MN136030-2',md:'3EOO(KAOT)',lv:2,lk:2},
+    {s:'C',pn:'REINF FR DR INR WAIST RH',po:'80142A000P',md:'5F00',lv:2,lk:2},
+    {s:'C',pn:'REINF FR DR INR WAIST LH',po:'80143A000P',md:'MMTH',lv:2,lk:2},
+    {s:'C',pn:'C/MBR RR END TRC TR',po:'5257A697',md:'4P45',lv:2,lk:2},
+    {s:'C',pn:'RAIL UPR GUARD FRAME',po:'93114A000P',md:'5F00',lv:2,lk:2},
+    {s:'C',pn:'BRKT CTR CONSOLE',po:'743G6W050P',md:'4L45V',lv:2,lk:3},
+    {s:'C',pn:'TRAY BATTERY',po:'5220HW040P/5220HB010P',md:'5H45V',lv:2,lk:3},
+    {s:'C',pn:'C/MBR RR END UPR',po:'5257A467',md:'4P45',lv:2,lk:3},
+    {s:'C',pn:'PANEL RR WHEELHOUSE INR LH',po:'5228A31/315',md:'4P45',lv:2,lk:4},
+    {s:'C',pn:'PANEL RR WHEELHOUSE INR RH',po:'5228A314/316',md:'4P45',lv:2,lk:4},
+    {s:'C',pn:'STRUT FR OTR LH',po:'93339A010P',md:'5F00',lv:3,lk:1},
+    {s:'C',pn:'STRUT FR OTR RH',po:'93338A010P',md:'5F00',lv:3,lk:1},
+    {s:'C',pn:'STRUT FR OTR RH',po:'93338A000P',md:'5F00',lv:3,lk:1},
+    {s:'C',pn:'STRUT FR OTR LH',po:'93339A000P',md:'5F00',lv:3,lk:1},
+    {s:'C',pn:'STRUT FR OTR RH (S/C)',po:'93338A020P',md:'5F00',lv:3,lk:2},
+    {s:'C',pn:'STRUT FR OTR LH (S/C)',po:'93339A020P',md:'5F00',lv:3,lk:2},
+    {s:'C',pn:'REINF RR DOOR HINGE D/CAB RH',po:'82126A010P',md:'5F00',lv:3,lk:2},
+    {s:'C',pn:'REINF RR DOOR HINGE D/CAB LH',po:'82127A010P',md:'5F00',lv:3,lk:2},
+    {s:'C',pn:'BOW ROOF FR',po:'5290 867',md:'4P45',lv:3,lk:3},
+    {s:'C',pn:'REINF RR DR BELT LINE INR RH',po:'82142A000P',md:'5F00',lv:3,lk:3},
+    {s:'C',pn:'REINF RR DR BELT LINE INR LH',po:'82143A000P',md:'5F00',lv:3,lk:3},
+    {s:'C',pn:'REINF HEADER PANEL',po:'93248A00P',md:'5F00',lv:3,lk:3},
+    {s:'C',pn:'REINF RR DOOR OTR WAIST LH',po:'82149A010P',md:'5F00',lv:3,lk:4},
+    {s:'C',pn:'REINF RR DOOR OTR WAIST RH',po:'82148A010P',md:'5F00',lv:3,lk:4},
+    {s:'C',pn:'C/MBR RR FLR OTR',po:'5253Z000/AB40',md:'4P45',lv:3,lk:4},
+    {s:'C',pn:'REINF RR DOOR OTR RH',po:'82148A030P',md:'5F47C',lv:4,lk:3},
+    {s:'C',pn:'REINF RR DOOR OTR LH',po:'82149A030P',md:'5F47C',lv:4,lk:3},
+    {s:'C',pn:'FENDER LH',po:'6C5265271',md:'D31C',lv:4,lk:4},
+    {s:'C',pn:'FENDER RH',po:'6C5265272',md:'D31C',lv:4,lk:4},
+    {s:'C',pn:'REINF RR W/HSE INR LWR RH',po:'6722A678/680',md:'4P00 19MY',lv:4,lk:4},
+    {s:'C',pn:'REINF RR W/HSE INR LWR LH',po:'6722A677/679',md:'4P00 19MY',lv:4,lk:4},
+    {s:'C',pn:'PANEL,R/DR INR LH',po:'ST-62M0290-000',md:'QX MMTh',lv:5,lk:1},
+    {s:'C',pn:'REINF RR W/HSE INR LWP LH',po:'6722A655',md:'19MY',lv:5,lk:2},
+    {s:'C',pn:'REINF RR W/HSE INR LWP RH',po:'6722A656',md:'19MY',lv:5,lk:2},
+    {s:'C',pn:'MBR ASSY DASH LWR CROSS CTR',po:'67402 5KE0A',md:'L02D',lv:5,lk:2},
+    {s:'C',pn:'PANEL.SIDE.OTR RR BODY LH',po:'KS-180 200 193-00',md:'KJ-506',lv:5,lk:3},
+    {s:'C',pn:'PNL SIDE OTR RR BODY C/FIX RH',po:'KS-N146377/8-0',md:'CR KJ-66',lv:5,lk:4},
+
+    // ===== SHELF D =====
+    {s:'D',pn:'REINF T/GATE HINGE RH',po:'5801C249',md:'4P45(20MY)',lv:1,lk:1},
+    {s:'D',pn:'REINF T/GATE HINGE LH',po:'5801C247',md:'4P45(20MY)',lv:1,lk:1},
+    {s:'D',pn:'REINF BACKBONE RR',po:'52510485',md:'4P45',lv:1,lk:1},
+    {s:'D',pn:'RNF 2ND SEAT STRIKER RH',po:'5253C692',md:'4P45',lv:1,lk:1},
+    {s:'D',pn:'REINF R/DR UPR LATCH LH',po:'821G5A020P',md:'5F00',lv:1,lk:1},
+    {s:'D',pn:'RNF 2ND SEAT STRIKER LH',po:'5253C691',md:'4P45',lv:1,lk:1},
+    {s:'D',pn:'REINF-RR FLOOR',po:'745A6A020P',md:'5F00',lv:1,lk:1},
+    {s:'D',pn:'REINF R/DR UPR LATCH RH',po:'821G4A020P',md:'5F00',lv:1,lk:1},
+    {s:'D',pn:'REINF BACKBONE SIDE RH',po:'5251D490',md:'4P45',lv:1,lk:2},
+    {s:'D',pn:'REINF BACKBONE SIDE LH',po:'5251D489',md:'4P45',lv:1,lk:2},
+    {s:'D',pn:'RNF T/GATE CORNER RH',po:'5801A402',md:'CR45',lv:1,lk:2},
+    {s:'D',pn:'RNF T/GATE CORNER LH',po:'5801A401',md:'CR46',lv:1,lk:2},
+    {s:'D',pn:'SASH ASSY R/DR WDO FR LH',po:'5735A557',md:'4P00',lv:1,lk:2},
+    {s:'D',pn:'SASH ASSY R/DR WDO FR RH',po:'5735A558',md:'4P00',lv:1,lk:2},
+    {s:'D',pn:'REINF BOLS 1ST (D/C)',po:'93614A060P',md:'5F00',lv:1,lk:3},
+    {s:'D',pn:'MBR CROSS FR SEAT MTG FR LH',po:'74333A000P',md:'5F00',lv:1,lk:4},
+    {s:'D',pn:'MBR CROSS FR SEAT MTG RR LH',po:'75433A000R',md:'5F00',lv:1,lk:4},
+    {s:'D',pn:'MBR CROSS FR MTG RR RH',po:'75432A000P',md:'5F00',lv:1,lk:4},
+    {s:'D',pn:'MBR CROSS FR SEAT MTG FR RH',po:'74332A000P',md:'5F00',lv:1,lk:4},
+    {s:'D',pn:'PANEL HOOD ING',po:'13E45 150.242.08',md:'KGOW',lv:3,lk:3},
+    {s:'D',pn:'PANEL QTR INR UPR LH',po:'5301G297/298/299/230',md:'4P45',lv:3,lk:4},
+    {s:'D',pn:'PANEL QTR INR UPR RH',po:'5301G297/298/299/230',md:'4P45',lv:3,lk:4},
+    {s:'D',pn:'FLOOR CENTER PANEL FRONT',po:'82646319/320',md:'P9218',lv:4,lk:1},
+    {s:'D',pn:'FIREWALL CENTER LNSD CAB',po:'82635173',md:'P9218',lv:4,lk:2},
+    {s:'D',pn:'RR DOOR INNER L',po:'5730B267',md:'4P47',lv:4,lk:4},
+    {s:'D',pn:'RR DOOR INNER R',po:'5730B269',md:'4P47',lv:4,lk:4},
+    {s:'D',pn:'PANEL REAR GATE OTR',po:'674A069-72/104-107',md:'4P00',lv:5,lk:1},
+    {s:'D',pn:'REINF RR SEAT BACK',po:'5281A425/426',md:'4P00',lv:5,lk:1},
+    {s:'D',pn:'C/MBR RR END UPR',po:'5257A174',md:'CR45',lv:5,lk:1},
+    {s:'D',pn:'PANEL, F/DR INR LH',po:'ST-59L0290-000',md:'MMTh SU47C',lv:5,lk:2},
+    {s:'D',pn:'PANEL, F/DR OTR LH',po:'ST-59L0190-000',md:'MMTh SU47C',lv:5,lk:3},
+    {s:'D',pn:'REINF RR DOOR HINGE UPR RH',po:'82118 5EKOA',md:'L02D',lv:5,lk:4},
+    {s:'D',pn:'REINF RR DOOR HINGE UPR LH',po:'82119 5EKOA',md:'L02D',lv:5,lk:4},
+
+    // ===== SHELF E =====
+    {s:'E',pn:'FENDER FRONT LH',po:'S7-62R0190-000',md:'QX MMTh',lv:1,lk:1},
+    {s:'E',pn:'COWL TOP',po:'663125EKOA',md:'L02D',lv:1,lk:1},
+    {s:'E',pn:'FENDER FRONT RH',po:'ST-62R0190-000',md:'QX MMTh',lv:1,lk:2},
+    {s:'E',pn:'BOLS FLOOR 3RD',po:'93632A080P/90P',md:'5F00',lv:1,lk:3},
+    {s:'E',pn:'CF BOLS FLOOR FR',po:'93612A180P',md:'5F00',lv:1,lk:3},
+    {s:'E',pn:'BOLS FLOOR 3RD',po:'93632A040P/070P',md:'5F00',lv:1,lk:3},
+    {s:'E',pn:'PANEL ROOF C/FIX',po:'KS-N146613/4-0',md:'CR(D/C) KJ-22',lv:1,lk:4},
+    {s:'E',pn:'PANEL RR GATE INR (D/C)',po:'93414A050P/020P',md:'5F00',lv:2,lk:1},
+    {s:'E',pn:'PANEL RR GATE INR',po:'93414A060P/030P',md:'5F00',lv:2,lk:2},
+    {s:'E',pn:'PANEL REAR D/CAB',po:'5281A455/456',md:'4P00',lv:4,lk:1},
+    {s:'E',pn:'FIREWALL CENTER LNSD CAB',po:'82635671',md:'P9218',lv:4,lk:4},
+    {s:'E',pn:'PANEL ROOF D/C',po:'5290C477/479',md:'4P00',lv:5,lk:1},
+    {s:'E',pn:'PANEL SIDEGATE INR LH',po:'ST-95W1590-000',md:'Z0SU47',lv:5,lk:2},
+    {s:'E',pn:'PANEL SIDEGATE INR LH',po:'ST-58W1590-000',md:'MMTh SU27',lv:5,lk:3},
+    {s:'E',pn:'PANEL SIDEGATE INR RH',po:'ST-57W1590-000',md:'MMTh SU47',lv:5,lk:4},
+  ];
+
+  function groupByModel(items) {
+    const g = {};
+    items.forEach(i => {
+      const k = i.md || '-';
+      if (!g[k]) g[k] = [];
+      g[k].push(i);
+    });
+    return Object.entries(g).sort((a,b) => b[1].length - a[1].length);
+  }
+
+  function getShelvesForModel(parts) {
+    return [...new Set(parts.map(p => p.s))].sort();
+  }
+
+  function renderGroups(items) {
+    const groups = groupByModel(items);
+    const el = document.getElementById('content');
+    if (groups.length === 0) {
+      el.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:14px">ไม่พบรายการที่ตรงกัน</div>';
+      return;
+    }
+    let html = '';
+    groups.forEach(([model, parts]) => {
+      const shelves = getShelvesForModel(parts);
+      const badges = shelves.map(s => `<span class="mini-badge" style="background:${COLORS[s]}">${s}</span>`).join('');
+
+      let rows = '';
+      parts.sort((a,b) => a.s.localeCompare(b.s) || a.lv - b.lv || a.lk - b.lk);
+      parts.forEach(p => {
+        rows += `<tr>
+          <td class="col-shelf"><span class="shelf-dot" style="background:${COLORS[p.s]}">${p.s}</span></td>
+          <td class="col-pn">${p.pn}</td>
+          <td class="col-po mono">${p.po}</td>
+          <td class="col-loc"><span class="loc-code mono" style="color:${COLORS[p.s]}">${p.s}-${p.lv}-${p.lk}</span></td>
+        </tr>`;
+      });
+
+      html += `
+      <div class="model-section">
+        <div class="model-header">
+          <div class="model-name">${model}</div>
+          <div class="shelves-used">${badges}</div>
+          <div class="count">${parts.length} ชิ้น</div>
+        </div>
+        <table class="parts-tbl">
+          <tr><th class="col-shelf">ชั้นวาง</th><th>Part Name</th><th>Part No</th><th class="col-loc">ตำแหน่ง</th></tr>
+          ${rows}
+        </table>
+      </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  window.filterAll = function filterAll() {
+    const q = document.getElementById('searchInput').value.trim().toUpperCase();
+    if (!q) { renderGroups(ALL_ITEMS); return; }
+    const filtered = ALL_ITEMS.filter(i =>
+      i.md.toUpperCase().includes(q) ||
+      i.pn.toUpperCase().includes(q) ||
+      i.po.toUpperCase().includes(q)
+    );
+    renderGroups(filtered);
+  };
+
+  renderGroups(ALL_ITEMS);
+})();
+
+/* =========================================================
+   VIEW 2 SCRIPT — ป้ายตำแหน่ง C/F (ติดหน้าชั้นวาง)
+   ========================================================= */
+(function(){
+  const SHELVES = {
+    A: {
+      color: '#1a3a5c', theme: 'theme-A',
+      items: [
+        {pn:'MBR-CROSS. 4TH C/C',po:'75442A010P',md:'5F00',lock:1,level:1},
+        {pn:'MBR-CROSS. 4TH',po:'75442A030P',md:'5F00',lock:1,level:1},
+        {pn:'REINF ASSY-ROPEHOOK RH',po:'933C0A060P',md:'5F00',lock:1,level:1},
+        {pn:'REINF ASSY-ROPEHOOK LH',po:'933C1A060P',md:'5F00',lock:1,level:1},
+        {pn:'BOW ROOF RR RR',po:'5920C907/909',md:'4P45',lock:2,level:1},
+        {pn:'BOW ROOF RR',po:'5290CB76',md:'4P45',lock:2,level:1},
+        {pn:'BOW ROOF CTR',po:'5280C870',md:'4P45',lock:2,level:1},
+        {pn:'C/MBR RR END INR SIDE RH',po:'5257B048',md:'4P45',lock:2,level:1},
+        {pn:'C/MBR RR END INR SIDE LH',po:'5257B047',md:'4P45',lock:2,level:1},
+        {pn:'C/NBR RR END INR CTR',po:'5257A695',md:'4P45',lock:3,level:1},
+        {pn:'EXT-FR FLOOR',po:'74314A010P',md:'5F00',lock:3,level:1},
+        {pn:'BOLS FLOOR FR',po:'93612A070P',md:'5F00',lock:3,level:1},
+        {pn:'REINF RR AIR SPOILER',po:'96044A010P',md:'5F00',lock:3,level:1},
+        {pn:'STPNR RR DR OTR RH',po:'82154 5EK0A',md:'L02D',lock:1,level:2},
+        {pn:'STPNR RR DR OTR LH',po:'82155 5EK0A',md:'L02D',lock:1,level:2},
+        {pn:'REINF PR DR OTR WAIST LH',po:'82149 5EK0A',md:'L02D',lock:1,level:2},
+        {pn:'STFNR -FR DR OTR LH',po:'80155 5EK0A',md:'L02D',lock:1,level:2},
+        {pn:'STFNR -FR DR OTR RH',po:'80154 5EK0A',md:'L02D',lock:1,level:2},
+        {pn:'REINF PR DR OTR WAIST LH',po:'82148 5EK0A',md:'L02D',lock:1,level:2},
+        {pn:'TEMP REINF RR DR HINGE UPR RH',po:'82118 5EK0A',md:'L02D',lock:2,level:2},
+        {pn:'TEMP REINF RR DR HINGE UPR LH',po:'82119 5EK0A',md:'L02D',lock:2,level:2},
+        {pn:'RNF 2ND SEAT SIDE RH',po:'5251A896',md:'CR45',lock:2,level:2},
+        {pn:'RNF 2ND SEAT SIDE LH',po:'5252A897',md:'CR45',lock:2,level:2},
+        {pn:'SILL CROSS 1ST ENTER',po:'6710A161/162',md:'4P00(MMTh)',lock:2,level:2},
+        {pn:'REINF FR DR HINGE LWR RH',po:'80126 5EK0A',md:'L02D',lock:2,level:2},
+        {pn:'REINF FR DR HINGE LWR LH',po:'80127 5EK0A',md:'L02D',lock:2,level:2},
+        {pn:'C/MBR FR FLR FR (RH)',po:'MN136016',md:'-',lock:2,level:2},
+        {pn:'C/MBR FR FLR FR (LH)',po:'MN136015',md:'-',lock:2,level:2},
+        {pn:'C/MBR RR END OTR LH',po:'5250A709',md:'4P45',lock:3,level:2},
+        {pn:'C/MBR RR END OTR RH',po:'5250A710',md:'4P45',lock:3,level:2},
+        {pn:'EXT.QTR INR LWR RR LH',po:'5301G383',md:'4P45',lock:3,level:2},
+        {pn:'EXT.QTR INR LWR RR RH',po:'5301G384',md:'4P45',lock:3,level:2},
+        {pn:'PWE-Body',po:'MN136122',md:'-',lock:3,level:2},
+        {pn:'EXT ASSY SIDE GATE INR RR RH',po:'6722A708/712',md:'19MY',lock:1,level:3},
+        {pn:'HOUSING RR LAMP LH',po:'5281A353',md:'4P00',lock:1,level:3},
+        {pn:'STAY S/SKIRT PANEL RR LH',po:'6748A099/101',md:'4P00',lock:1,level:3},
+        {pn:'REINF SIDE GATE RR RH',po:'6722A658',md:'4P00(19MY)',lock:1,level:3},
+        {pn:'REINF SIDE GATE RR LH',po:'6722A657',md:'4P00(19MY)',lock:1,level:3},
+        {pn:'PANEL SIDE GATE RR LH',po:'6722A269/405',md:'4P00',lock:1,level:3},
+        {pn:'PANEL SIDE GATE RR RH',po:'6722A270/406',md:'4P00',lock:1,level:3},
+        {pn:'EXT ASSY SIDE GATE INR RR LH',po:'6722A707/711',md:'19MY',lock:1,level:3},
+        {pn:'SILLR FLR SIDE INR LH',po:'5253M329',md:'4P00',lock:2,level:3},
+        {pn:'HOUSING RR LAMP RH',po:'5281A354',md:'4P00',lock:2,level:3},
+        {pn:'BOARD RR BODY HEADER',po:'6720A051/083',md:'4P00',lock:2,level:3},
+        {pn:'REINF BACK BONE',po:'MN136061-4',md:'3EOO(KAOT)',lock:2,level:3},
+        {pn:'COVER-ENG RR',po:'74811A000P/010P',md:'5F00',lock:3,level:3},
+        {pn:'RE INF F/DR BELT LINE OTR LH',po:'57008619',md:'4P00',lock:3,level:3},
+        {pn:'RE INF F/DR BELT LINE OTR RH',po:'57008620',md:'4P00',lock:3,level:3},
+        {pn:'STAY S/SKIRT PANEL RR LH',po:'6758A19/6748A221',md:'4P00',lock:1,level:4},
+        {pn:'STAY S/SKIRT PANEL RR RH',po:'6748A220/222',md:'4P00',lock:1,level:4},
+        {pn:'REINF 2ND SEAT CTR',po:'5851A703',md:'CR45',lock:1,level:4},
+        {pn:'REINF SIDE GATE FR LH',po:'6722A681',md:'4P00(19MY)',lock:1,level:4},
+        {pn:'REINF SIDE GATE FR RH',po:'6722A682',md:'4P00(19MY)',lock:1,level:4},
+        {pn:'SILLR FLR SIDE INR RH',po:'5253M330',md:'4P00',lock:1,level:4},
+        {pn:'PNL,RR GATE OTR',po:'ST-57W0490-000',md:'MMTh SU',lock:2,level:4},
+        {pn:'PANEL, ROOF',po:'ST-58Y0190-000',md:'MMTh SU27',lock:3,level:4},
+        {pn:'PANEL SIDE INR LH',po:'93381A010P',md:'MY26',lock:1,level:5},
+        {pn:'PANEL-SIDE, OTR LH',po:'93313A290P',md:'26MY(SWB)',lock:2,level:5},
+        {pn:'PANEL-SIDE, OTR RH',po:'93312A240P',md:'26MY(SWB)',lock:3,level:5},
+      ]
+    },
+    B: {
+      color: '#5c1a3a', theme: 'theme-B',
+      items: [
+        {pn:'PANEL SIDE INR RH',po:'93381A020P',md:'MY26',lock:1,level:5},
+        {pn:'PANEL,R/DR INR (RH)',po:'ST-62M1290-000',md:'QX MMTH',lock:2,level:5},
+      ]
+    },
+    C: {
+      color: '#2c5a3a', theme: 'theme-C',
+      items: [
+        {pn:'REINF BACKBONE',po:'74366W010P',md:'4L45V',lock:1,level:1},
+        {pn:'REINF RR FLOOR C/C',po:'745A8A010P',md:'5F00',lock:1,level:1},
+        {pn:'COVER-FR UNDER',po:'50812A000P/50810A010P',md:'5F00',lock:1,level:1},
+        {pn:'COVER-FR UNDER',po:'50812A020P',md:'5F00',lock:1,level:1},
+        {pn:'COVER-RR GATE',po:'6724A021ZZ',md:'-',lock:2,level:1},
+        {pn:'RAIL,ROOF FRONT',po:'5290C480',md:'4P00',lock:2,level:1},
+        {pn:'REINF SUN ROOF',po:'5290D003',md:'4P45',lock:2,level:1},
+        {pn:'REINF HOOD LOCK UPR',po:'5900B048',md:'-',lock:3,level:1},
+        {pn:'REINF,RR/DR HINGE LH/RH',po:'5730B283/284',md:'4P00',lock:3,level:1},
+        {pn:'BOW ROOF CTR RR',po:'5290C906(873)',md:'4P45',lock:3,level:1},
+        {pn:'REINF R DR BELT LINE OTR',po:'5730B279-80',md:'4P47',lock:3,level:1},
+        {pn:'PANEL SIDE GATE INR FR UPR LH',po:'6722A229',md:'4P00',lock:4,level:1},
+        {pn:'REINF RR GATE INR LH',po:'6724A073',md:'4P00',lock:4,level:1},
+        {pn:'REINF RR GATE INR RH',po:'6724A074',md:'4P00',lock:4,level:1},
+        {pn:'RAIL-UPR GUARD FRAME',po:'93114A040P',md:'5F00',lock:1,level:2},
+        {pn:'RENL HEADER PANEL',po:'93114A050P',md:'5F00',lock:1,level:2},
+        {pn:'PANEL RR GATE OTR',po:'93412A810P',md:'5F00',lock:1,level:2},
+        {pn:'REINF RR SEATBELT ANCH(D/C)',po:'76686A020P',md:'5F00',lock:1,level:2},
+        {pn:'C/MBR BACK BONE FR',po:'MN136030-2',md:'3EOO(KAOT)',lock:2,level:2},
+        {pn:'REINF FR DR INR WAIST RH',po:'80142A000P',md:'5F00',lock:2,level:2},
+        {pn:'REINF FR DR INR WAIST LH',po:'80143A000P',md:'MMTH',lock:2,level:2},
+        {pn:'C/MBR RR END TRC TR',po:'5257A697',md:'4P45',lock:2,level:2},
+        {pn:'RAIL UPR GUARD FRAME',po:'93114A000P',md:'5F00',lock:2,level:2},
+        {pn:'BRKT CTR CONSOLE',po:'743G6W050P',md:'4L45V',lock:3,level:2},
+        {pn:'TRAY BATTERY',po:'5220HW040P/5220HB010P',md:'5H45V',lock:3,level:2},
+        {pn:'C/MBR RR END UPR',po:'5257A467',md:'4P45',lock:3,level:2},
+        {pn:'PANEL RR WHEELHOUSE INR LH',po:'5228A31/315',md:'4P45',lock:4,level:2},
+        {pn:'PANEL RR WHEELHOUSE INR RH',po:'5228A314/316',md:'4P45',lock:4,level:2},
+        {pn:'STRUT FR OTR LH',po:'93339A010P',md:'5F00',lock:1,level:3},
+        {pn:'STRUT FR OTR RH',po:'93338A010P',md:'5F00',lock:1,level:3},
+        {pn:'STRUT FR OTR RH',po:'93338A000P',md:'5F00',lock:1,level:3},
+        {pn:'STRUT FR OTR LH',po:'93339A000P',md:'5F00',lock:1,level:3},
+        {pn:'STRUT FR OTR RH (S/C)',po:'93338A020P',md:'5F00',lock:2,level:3},
+        {pn:'STRUT FR OTR LH (S/C)',po:'93339A020P',md:'5F00',lock:2,level:3},
+        {pn:'REINF RR DOOR HINGE D/CAB RH',po:'82126A010P',md:'5F00',lock:2,level:3},
+        {pn:'REINF RR DOOR HINGE D/CAB LH',po:'82127A010P',md:'5F00',lock:2,level:3},
+        {pn:'BOW ROOF FR',po:'5290 867',md:'4P45',lock:3,level:3},
+        {pn:'REINF RR DR BELT LINE INR RH',po:'82142A000P',md:'5F00',lock:3,level:3},
+        {pn:'REINF RR DR BELT LINE INR LH',po:'82143A000P',md:'5F00',lock:3,level:3},
+        {pn:'REINF HEADER PANEL',po:'93248A00P',md:'5F00',lock:3,level:3},
+        {pn:'REINF RR DOOR OTR WAIST LH',po:'82149A010P',md:'5F00',lock:4,level:3},
+        {pn:'REINF RR DOOR OTR WAIST RH',po:'82148A010P',md:'5F00',lock:4,level:3},
+        {pn:'C/MBR RR FLR OTR',po:'5253Z000/AB40',md:'4P45',lock:4,level:3},
+        {pn:'REINF RR DOOR OTR RH',po:'82148A030P',md:'5F47C',lock:3,level:4},
+        {pn:'REINF RR DOOR OTR LH',po:'82149A030P',md:'5F47C',lock:3,level:4},
+        {pn:'FENDER LH',po:'6C5265271',md:'D31C',lock:4,level:4},
+        {pn:'FENDER RH',po:'6C5265272',md:'D31C',lock:4,level:4},
+        {pn:'REINF RR W/HSE INR LWR RH',po:'6722A678/680',md:'4P00 19MY',lock:4,level:4},
+        {pn:'REINF RR W/HSE INR LWR LH',po:'6722A677/679',md:'4P00 19MY',lock:4,level:4},
+        {pn:'PANEL,R/DR INR LH',po:'ST-62M0290-000',md:'QX MMTh',lock:1,level:5},
+        {pn:'REINF RR W/HSE INR LWP LH',po:'6722A655',md:'19MY',lock:2,level:5},
+        {pn:'REINF RR W/HSE INR LWP RH',po:'6722A656',md:'19MY',lock:2,level:5},
+        {pn:'MBR ASSY DASH LWR CROSS CTR',po:'67402 5KE0A',md:'L02D',lock:2,level:5},
+        {pn:'PANEL.SIDE.OTR RR BODY LH',po:'KS-180 200 193-00',md:'KJ-506',lock:3,level:5},
+        {pn:'PNL SIDE OTR RR BODY C/FIX RH',po:'KS-N146377/8-0',md:'CR KJ-66',lock:4,level:5},
+      ]
+    },
+    D: {
+      color: '#5a4a1a', theme: 'theme-D',
+      items: [
+        {pn:'REINF T/GATE HINGE RH',po:'5801C249',md:'4P45(20MY)',lock:1,level:1},
+        {pn:'REINF T/GATE HINGE LH',po:'5801C247',md:'4P45(20MY)',lock:1,level:1},
+        {pn:'REINF BACKBONE RR',po:'52510485',md:'4P45',lock:1,level:1},
+        {pn:'RNF 2ND SEAT STRIKER RH',po:'5253C692',md:'4P45',lock:1,level:1},
+        {pn:'REINF R/DR UPR LATCH LH',po:'821G5A020P',md:'5F00',lock:1,level:1},
+        {pn:'RNF 2ND SEAT STRIKER LH',po:'5253C691',md:'4P45',lock:1,level:1},
+        {pn:'REINF-RR FLOOR',po:'745A6A020P',md:'5F00',lock:1,level:1},
+        {pn:'REINF R/DR UPR LATCH RH',po:'821G4A020P',md:'5F00',lock:1,level:1},
+        {pn:'REINF BACKBONE SIDE RH',po:'5251D490/776F0W010P',md:'4P45',lock:2,level:1},
+        {pn:'REINF BACKBONE SIDE LH',po:'5251D489/776F0W020P',md:'4P45',lock:2,level:1},
+        {pn:'C/MBR 2ND SPLIT RR',po:'-',md:'-',lock:2,level:1},
+        {pn:'RNF T/GATE CORNER RH',po:'5801A402',md:'CR45',lock:2,level:1},
+        {pn:'RNF T/GATE CORNER LH',po:'5801A401',md:'CR46',lock:2,level:1},
+        {pn:'SASH ASSY R/DR WDO FR LH',po:'5735A557',md:'4P00',lock:2,level:1},
+        {pn:'SASH ASSY R/DR WDO FR RH',po:'5735A558',md:'4P00',lock:2,level:1},
+        {pn:'REINF BOLS 1ST (D/C)',po:'93614A060P',md:'5F00',lock:3,level:1},
+        {pn:'MBR CROSS FR SEAT MTG FR LH',po:'74333A000P',md:'5F00',lock:4,level:1},
+        {pn:'MBR CROSS FR SEAT MTG RR LH',po:'75433A000R',md:'5F00',lock:4,level:1},
+        {pn:'MBR CROSS FR MTG RR RH',po:'75432A000P',md:'5F00',lock:4,level:1},
+        {pn:'MBR CROSS FR SEAT MTG FR RH',po:'74332A000P',md:'5F00',lock:4,level:1},
+        {pn:'PANEL HOOD ING',po:'13E45 150.242.08',md:'KGOW',lock:3,level:3},
+        {pn:'PANEL QTR INR UPR LH',po:'5301G297/298/299/230',md:'4P45',lock:4,level:3},
+        {pn:'PANEL QTR INR UPR RH',po:'5301G297/298/299/230',md:'4P45',lock:4,level:3},
+        {pn:'FLOOR CENTER PANEL FRONT',po:'82646319/320',md:'P9218',lock:1,level:4},
+        {pn:'FIREWALL CENTER LNSD CAB',po:'82635173',md:'P9218',lock:2,level:4},
+        {pn:'RR DOOR INNER L',po:'5730B267',md:'4P47',lock:4,level:4},
+        {pn:'RR DOOR INNER R',po:'5730B269',md:'4P47',lock:4,level:4},
+        {pn:'PANEL REAR GATE OTR',po:'674A069-72/104-107',md:'4P00',lock:1,level:5},
+        {pn:'REINF RR SEAT BACK',po:'5281A425/426',md:'4P00',lock:1,level:5},
+        {pn:'C/MBR RR END UPR',po:'5257A174',md:'CR45',lock:1,level:5},
+        {pn:'PANEL, F/DR INR LH',po:'ST-59L0290-000',md:'MMTh SU47C',lock:2,level:5},
+        {pn:'PANEL, F/DR OTR LH',po:'ST-59L0190-000',md:'MMTh SU47C',lock:3,level:5},
+        {pn:'REINF RR DOOR HINGE UPR RH',po:'82118 5EKOA',md:'L02D',lock:4,level:5},
+        {pn:'REINF RR DOOR HINGE UPR LH',po:'82119 5EKOA',md:'L02D',lock:4,level:5},
+      ]
+    },
+    E: {
+      color: '#3a2c5a', theme: 'theme-E',
+      items: [
+        {pn:'FENDER FRONT LH',po:'S7-62R0190-000',md:'QX MMTh',lock:1,level:1},
+        {pn:'COWL TOP',po:'663125EKOA',md:'L02D',lock:1,level:1},
+        {pn:'FENDER FRONT RH',po:'ST-62R0190-000',md:'QX MMTh',lock:2,level:1},
+        {pn:'BOLS FLOOR 3RD',po:'93632A080P/90P',md:'5F00',lock:3,level:1},
+        {pn:'CF BOLS FLOOR FR',po:'93612A180P',md:'5F00',lock:3,level:1},
+        {pn:'BOLS FLOOR 3RD',po:'93632A040P/070P',md:'5F00',lock:3,level:1},
+        {pn:'PANEL ROOF C/FIX',po:'KS-N146613/4-0',md:'CR(D/C) KJ-22',lock:4,level:1},
+        {pn:'PANEL RR GATE INR (D/C)',po:'93414A050P/020P',md:'5F00',lock:1,level:2},
+        {pn:'PANEL RR GATE INR',po:'93414A060P/030P',md:'5F00',lock:2,level:2},
+        {pn:'PANEL REAR D/CAB',po:'5281A455/456',md:'4P00',lock:1,level:4},
+        {pn:'FIREWALL CENTER LNSD CAB',po:'82635671',md:'P9218',lock:4,level:4},
+        {pn:'PANEL ROOF D/C',po:'5290C477/479',md:'4P00',lock:1,level:5},
+        {pn:'PANEL SIDEGATE INR LH',po:'ST-95W1590-000',md:'Z0SU47',lock:2,level:5},
+        {pn:'PANEL SIDEGATE INR LH',po:'ST-58W1590-000',md:'MMTh SU27',lock:3,level:5},
+        {pn:'PANEL SIDEGATE INR RH',po:'ST-57W1590-000',md:'MMTh SU47',lock:4,level:5},
+      ]
+    }
+  };
+
+  function getMaxLock(shelf) {
+    let m = 0;
+    shelf.items.forEach(i => { if (i.lock > m) m = i.lock; });
+    return Math.max(m, 3);
+  }
+
+  function groupByModel(items) {
+    const g = {};
+    items.forEach(i => {
+      const k = i.md || '-';
+      if (!g[k]) g[k] = [];
+      g[k].push(i);
+    });
+    return Object.entries(g).sort((a,b) => a[0].localeCompare(b[0]));
+  }
+
+  function buildSign(key, shelf) {
+    const ml = getMaxLock(shelf);
+    const groups = groupByModel(shelf.items);
+
+    let lookupRows = '';
+    groups.forEach(([model, parts]) => {
+      lookupRows += `<tr class="model-label-row"><td colspan="3" style="background:#f0f0f0;padding:4px 8px;font-weight:700;font-size:11px;border-bottom:1px solid #ddd"><span class="dot" style="background:${shelf.color};width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px"></span>${model}</td></tr>`;
+      parts.forEach(p => {
+        lookupRows += `<tr style="border-bottom:1px solid #f5f5f5"><td class="pname" style="padding:2px 8px;font-size:10px;font-weight:600">${p.pn}</td><td class="pno mono" style="padding:2px 6px;font-size:9px;color:#555">${p.po}</td><td class="loc mono" style="padding:2px 8px;font-size:10px;font-weight:700;color:${shelf.color};white-space:nowrap">${key}-${p.level}-${p.lock}</td></tr>`;
+      });
+    });
+
+    let gridRows = '';
+    for (let lv = 5; lv >= 1; lv--) {
+      let slots = '';
+      for (let lk = 1; lk <= ml; lk++) {
+        const parts = shelf.items.filter(i => i.level === lv && i.lock === lk);
+        if (parts.length > 0) {
+          const inner = parts.map(p =>
+            `<div class="pn">${p.pn}</div><div class="po mono">${p.po}</div><div class="md"><span>${p.md}</span></div>`
+          ).join('<div style="border-top:1px dotted #ddd;margin:2px 0"></div>');
+          slots += `<div class="slot occupied" style="background:${shelf.color}11"><span class="slot-addr mono">${key}-${lv}-${lk}</span>${inner}</div>`;
+        } else {
+          slots += `<div class="slot empty"><span class="slot-addr mono">${key}-${lv}-${lk}</span></div>`;
+        }
+      }
+      gridRows += `<div class="level-row"><div class="level-label"><div class="num">${lv}</div>ชั้น</div><div class="level-slots">${slots}</div></div>`;
+    }
+
+    let lockHdrSlots = '';
+    for (let lk = 1; lk <= ml; lk++) {
+      lockHdrSlots += `<div class="lh-slot" style="color:${shelf.color}">Lock ${lk}</div>`;
+    }
+
+    return `
+    <div class="sign ${shelf.theme}" id="sign-${key}">
+      <div class="sign-header" style="background:${shelf.color}">
+        <div><div class="shelf-name">ชั้นวาง ${key}</div><div class="shelf-sub">SHELF ${key} — C/F Storage</div></div>
+        <div class="update-box">อัปเดต: ___/___/______<br>${shelf.items.length} รายการ</div>
+      </div>
+      <div class="lookup">
+        <h3>🔍 ค้นหาตาม Model → ตำแหน่ง</h3>
+        <div class="lookup-scroll"><table class="lookup-tbl">${lookupRows}</table></div>
+      </div>
+      <div class="grid-section">
+        <h3>📦 แผนผังชั้นวาง ${key}</h3>
+        <div class="lock-hdr"><div class="lh-spacer" style="background:${shelf.color}">ชั้น</div><div class="lh-slots">${lockHdrSlots}</div></div>
+        ${gridRows}
+      </div>
+      <div class="sign-footer">
+        <div class="legend"><span class="sw" style="background:${shelf.color}11"></span> มี C/F &nbsp; <span class="sw" style="background:#fafafa"></span> ว่าง</div>
+        <div class="mono" style="font-size:9px;color:#aaa">รหัส: ชั้นวาง - ชั้นที่ - ล็อก</div>
+      </div>
+    </div>`;
+  }
+
+  const tabsEl = document.getElementById('tabs');
+  const signsEl = document.getElementById('signs');
+  const keys = Object.keys(SHELVES);
+  keys.forEach((k, i) => {
+    const s = SHELVES[k];
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.textContent = `ชั้น ${k}`;
+    tab.style.background = i === 0 ? s.color : '#fff';
+    tab.style.color = i === 0 ? '#fff' : s.color;
+    tab.style.borderColor = s.color;
+    tab.onclick = () => {
+      document.querySelectorAll('#view-signs .tab').forEach((t,j) => {
+        t.classList.remove('active');
+        t.style.background = '#fff';
+        t.style.color = SHELVES[keys[j]].color;
+      });
+      tab.classList.add('active');
+      tab.style.background = s.color;
+      tab.style.color = '#fff';
+      document.querySelectorAll('#view-signs .sign').forEach(sg => sg.classList.remove('active'));
+      document.getElementById('sign-' + k).classList.add('active');
+    };
+    tabsEl.appendChild(tab);
+    signsEl.innerHTML += buildSign(k, s);
+  });
+  document.querySelector('#view-signs .sign').classList.add('active');
+})();
+
+/* =========================================================
+   MASTER (outer) tab switcher
+   ========================================================= */
+document.querySelectorAll('.masterTab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.masterTab').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.cf-view').forEach(function(v){ v.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+</script>
