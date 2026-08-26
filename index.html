@@ -73,6 +73,7 @@
   .bg-C{background:#2c5a3a} .c-C{color:#2c5a3a}
   .bg-D{background:#5a4a1a} .c-D{color:#5a4a1a}
   .bg-E{background:#3a2c5a} .c-E{color:#3a2c5a}
+  .bg-LineD{background:#b34700} .c-LineD{color:#b34700}
 
   /* =========================================================
      VIEW 2 — ป้ายตำแหน่ง C/F (ติดหน้าชั้นวาง)
@@ -129,6 +130,18 @@
   .slot .md span{background:#e8e8e8;padding:0 3px;border-radius:2px;font-weight:600}
   .slot.empty::after{content:'—';font-size:11px;color:#ccc;text-align:center;display:block}
 
+  .lined-list{border:1px solid #e0e0e0;border-radius:4px;overflow:hidden}
+  .lined-row{display:flex;border-bottom:1px dashed #ccc;min-height:34px}
+  .lined-row:last-child{border-bottom:none}
+  .lined-row.empty{background:#fafafa}
+  .lined-num{width:52px;min-width:52px;background:#f0e6c8;border-right:2px solid #8B6914;display:flex;align-items:center;justify-content:center;font-weight:700;color:#5a4510;font-size:20px}
+  .lined-content{flex:1;padding:6px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .lined-content .pn{font-size:13px;font-weight:700;color:#111;line-height:1.25;margin-bottom:1px}
+  .lined-content .po{font-size:11px;color:#336;margin-bottom:1px}
+  .lined-content .md{font-size:11px;color:#666}
+  .lined-content .md span{background:#e8e8e8;padding:0 3px;border-radius:2px;font-weight:600}
+  .lined-row.empty .lined-content{color:#ccc;font-size:13px;flex-direction:row;align-items:center}
+
   .sign-footer{background:#f9f9f9;border-top:1px solid #ddd;padding:6px 16px;display:flex;justify-content:space-between;font-size:14px;color:#999}
   .legend{display:flex;gap:12px;align-items:center}
   .legend .sw{width:12px;height:12px;border:1px solid #ccc;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:3px}
@@ -138,10 +151,19 @@
   .theme-C{--hdr:#2c5a3a;--occ:#eef8f0;--dot:#2c5a3a}
   .theme-D{--hdr:#5a4a1a;--occ:#f8f5ee;--dot:#5a4a1a}
   .theme-E{--hdr:#3a2c5a;--occ:#f3eef8;--dot:#3a2c5a}
+  .theme-LineD{--hdr:#b34700;--occ:#fdf1e8;--dot:#b34700}
 
   /* =========================================================
      VIEW 3 — แผนที่ตำแหน่งชั้นวาง
      ========================================================= */
+  .map-tabs{display:flex;gap:6px;background:#222;padding:6px;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.2);margin-bottom:2px}
+  .map-tab{appearance:none;border:0;background:transparent;color:#aaa;font-family:inherit;font-size:18px;font-weight:700;letter-spacing:.3px;padding:8px 16px;border-radius:5px;cursor:pointer}
+  .map-tab:hover{color:#fff}
+  .map-tab.active{background:#fff;color:#222}
+  .map-tab:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .map-panel{display:none}
+  .map-panel.active{display:block}
+
   .map-board{background:#fff;width:920px;max-width:98vw;border:3px solid #222;box-shadow:0 6px 24px rgba(0,0,0,.15)}
   .map-header{background:#222;color:#fff;padding:18px 24px}
   .map-header h2{font-size:22px;letter-spacing:.5px}
@@ -155,7 +177,9 @@
   .map-shelf.bg-C{fill:#2c5a3a}
   .map-shelf.bg-D{fill:#5a4a1a}
   .map-shelf.bg-E{fill:#3a2c5a}
+  .map-shelf.bg-LineD{fill:#b34700}
   .map-shelf-label{font-size:30px;font-weight:700;fill:#fff;text-anchor:middle;font-family:var(--font-th);pointer-events:none}
+  .map-vert-label{font-size:24px;font-weight:700;fill:#fff;text-anchor:middle;font-family:var(--font-th);pointer-events:none}
   .map-lab-label{font-size:26px;font-weight:700;fill:#fff;text-anchor:middle;font-family:var(--font-th)}
   .map-door-label{font-size:14px;fill:#666;text-anchor:middle;font-family:var(--font-th)}
   .map-aisle-label{font-size:14px;fill:#888;text-anchor:middle;font-family:var(--font-th)}
@@ -204,6 +228,7 @@
         <span class="shelf-badge bg-C">C</span>
         <span class="shelf-badge bg-D">D</span>
         <span class="shelf-badge bg-E">E</span>
+        <span class="shelf-badge bg-LineD">Line D</span>
       </div>
 
       <div class="search-bar">
@@ -236,7 +261,11 @@
        VIEW 3 — แผนที่ตำแหน่งชั้นวาง
        ========================================================= -->
   <div id="view-map" class="cf-view">
-    <div class="map-board">
+    <div class="map-tabs">
+      <button class="map-tab active" data-map="storage">🏬 ห้องเก็บของ (Lab + A-E)</button>
+      <button class="map-tab" data-map="line">🏭 โซนไลน์ผลิต (Line C/D)</button>
+    </div>
+    <div class="map-board map-panel active" id="map-storage">
       <div class="map-header">
         <h2>🗺️ แผนผังพื้นที่จัดเก็บ C/F</h2>
         <p>มุมมองจากด้านบน (Top View) — คลิกที่กล่องชั้นวางเพื่อเปิดป้ายตำแหน่งของชั้นนั้น</p>
@@ -298,6 +327,41 @@
         หมายเหตุ: ชั้น B/C/D/E เป็นรางเลื่อน เลื่อนเข้า-ออกได้ในแนวตั้ง 1-5 ของแต่ละชั้นเพื่อหยิบ C/F • ทิศทางเลข Lock ของ A สวนทางกับ B/C/D/E
       </div>
     </div>
+
+    <div class="map-board map-panel" id="map-line">
+      <div class="map-header">
+        <h2>🏭 โซนไลน์ผลิต — Line C / Line D</h2>
+        <p>มุมมองจากด้านบน (Top View) — คลิกที่กล่องพื้นที่ข้าง Line D เพื่อเปิดป้ายตำแหน่ง (แยกทางเดินจากห้องเก็บของหลัก)</p>
+      </div>
+      <svg class="site-map" viewBox="0 0 920 650" role="img" aria-label="ผังโซนไลน์ผลิต Line C และ Line D พร้อมพื้นที่ข้าง Line D">
+        <!-- Line C -->
+        <rect x="60" y="25" width="220" height="580" fill="#111"/>
+        <text x="170" y="315" class="map-shelf-label">Line C</text>
+
+        <!-- Line D -->
+        <rect x="330" y="25" width="220" height="580" fill="#111"/>
+        <text x="440" y="315" class="map-shelf-label">Line D</text>
+
+        <!-- พื้นที่ข้าง Line D (storage strip, clickable) -->
+        <rect class="map-shelf bg-LineD" x="610" y="65" width="90" height="500" tabindex="0" role="button" aria-label="เปิดป้ายพื้นที่ข้าง Line D" onclick="goToShelf('LineD')" onkeypress="if(event.key==='Enter')goToShelf('LineD')"/>
+        <text x="655" y="281" class="map-vert-label" style="pointer-events:none">
+          <tspan x="655" dy="0">ข้าง</tspan>
+          <tspan x="655" dy="34">Line</tspan>
+          <tspan x="655" dy="34">D</tspan>
+        </text>
+
+        <!-- position direction legend: 1 (top, near Line D) -> 15 (bottom) -->
+        <rect class="map-lock-box" x="770" y="40" width="85" height="45"/>
+        <text x="812" y="69" class="map-lock-num">1</text>
+        <rect class="map-lock-box" x="770" y="540" width="85" height="45"/>
+        <text x="812" y="569" class="map-lock-num">15</text>
+        <line x1="812" y1="91" x2="812" y2="534" stroke="#333" stroke-width="2" marker-end="url(#mapArrow)"/>
+        <text x="812" y="315" class="map-lock-caption" transform="rotate(-90 812 315)">ตำแหน่ง 1 → 15</text>
+      </svg>
+      <div class="map-legend">
+        หมายเหตุ: โซนนี้อยู่คนละฝั่งทางเดินกับห้องเก็บของหลัก (Lab/A-E) — พื้นที่ข้าง Line D เป็นพื้นราบเรียงตำแหน่งเดียว ไม่มีชั้น/ล็อกแบบชั้นวาง
+      </div>
+    </div>
   </div>
 
 </div>
@@ -307,7 +371,7 @@
    VIEW 1 SCRIPT — ป้ายรวม C/F (ค้นหาตำแหน่ง)
    ========================================================= */
 (function(){
-  const COLORS = {A:'#1a3a5c',B:'#5c1a3a',C:'#2c5a3a',D:'#5a4a1a',E:'#3a2c5a'};
+  const COLORS = {A:'#1a3a5c',B:'#5c1a3a',C:'#2c5a3a',D:'#5a4a1a',E:'#3a2c5a',LineD:'#b34700'};
 
   const ALL_ITEMS = [
     // ===== SHELF A =====
@@ -502,6 +566,25 @@
     {s:'E',pn:'PANAL FR',po:'53311W040',md:'-',lv:2,lk:4},
     {s:'E',pn:'PANEL REAR GATE OTR',po:'674A069-72/104-107/128-131',md:'4P00',lv:4,lk:2},
     {s:'E',pn:'FR FENDER PNL (LH)',po:'KS-N136443/4-0',md:'CR KJ-52',lv:4,lk:3},
+
+    // ===== ข้าง LINE D =====
+    {s:'LineD',pn:'FLOOR RR (SG)',po:'74512A040P, 050P',md:'5F00',pos:1},
+    {s:'LineD',pn:'FLOOR-FR C/C',po:'74512A010P/74512A080P',md:'5F00',pos:2},
+    {s:'LineD',pn:'DOOR RR INR RH',po:'82112A010P',md:'5F00',pos:3},
+    {s:'LineD',pn:'DOOR RR INR LH',po:'82113A010P',md:'5F00',pos:4},
+    {s:'LineD',pn:'OX PANEL TALL GATE INR',po:'5801C25657, 5859',md:'4P45',pos:5},
+    {s:'LineD',pn:'PANEL-HEADER(D/C)',po:'93201A080P, 93222A180P',md:'5F00',pos:6},
+    {s:'LineD',pn:'DOOR RR INR RH',po:'82112A000P',md:'5F00',pos:7},
+    {s:'LineD',pn:'DOOR RR INR LH',po:'82113A000P',md:'5F00',pos:8},
+    {s:'LineD',pn:'FLOOR FR',po:'74312A000P/050P/080P/120P',md:'5F00',pos:9},
+    {s:'LineD',pn:'FLOOR FR',po:'74312D000P(010P)(020P)(030P)',md:'5K45',pos:10},
+    {s:'LineD',pn:'PROTR HEAT FUEL TANK FR',po:'17298B020P/17298B060P',md:'5H45V',pos:11},
+    {s:'LineD',pn:'REINF-TAIL-GATE,OTR',po:'90163D010P',md:'5K45',pos:12},
+    {s:'LineD',pn:'STRUT RR OTR RH',po:'93358A030P',md:'5F00',pos:13},
+    {s:'LineD',pn:'STRUT RR OTR LH',po:'93359A040P',md:'5F00',pos:13},
+    {s:'LineD',pn:'STRUT RR OTR RH',po:'93358A040P',md:'26MY',pos:14},
+    {s:'LineD',pn:'STRUT RR OTR LH',po:'93359A050P',md:'26MY',pos:14},
+    {s:'LineD',pn:'FLOOR RR RR',po:'74514D000P/D010P/D030P',md:'5K45',pos:15},
   ];
 
   function groupByModel(items) {
@@ -531,13 +614,14 @@
       const badges = shelves.map(s => `<span class="mini-badge" style="background:${COLORS[s]}">${s}</span>`).join('');
 
       let rows = '';
-      parts.sort((a,b) => a.s.localeCompare(b.s) || a.lv - b.lv || a.lk - b.lk);
+      parts.sort((a,b) => a.s.localeCompare(b.s) || ((a.pos ?? a.lv) - (b.pos ?? b.lv)) || ((a.lk||0) - (b.lk||0)));
       parts.forEach(p => {
+        const loc = p.s === 'LineD' ? `${p.s}-${p.pos}` : `${p.s}-${p.lv}-${p.lk}`;
         rows += `<tr>
           <td class="col-shelf"><span class="shelf-dot" style="background:${COLORS[p.s]}">${p.s}</span></td>
           <td class="col-pn">${p.pn}</td>
           <td class="col-po mono">${p.po}</td>
-          <td class="col-loc"><span class="loc-code mono" style="color:${COLORS[p.s]}">${p.s}-${p.lv}-${p.lk}</span></td>
+          <td class="col-loc"><span class="loc-code mono" style="color:${COLORS[p.s]}">${loc}</span></td>
         </tr>`;
       });
 
@@ -784,6 +868,28 @@
         {pn:'PANEL REAR GATE OTR',po:'674A069-72/104-107/128-131',md:'4P00',lock:2,level:4},
         {pn:'FR FENDER PNL (LH)',po:'KS-N136443/4-0',md:'CR KJ-52',lock:3,level:4},
       ]
+    },
+    LineD: {
+      color: '#b34700', theme: 'theme-LineD', type: 'linear', label: 'ข้าง Line D',
+      items: [
+        {pn:'FLOOR RR (SG)',po:'74512A040P, 050P',md:'5F00',pos:1},
+        {pn:'FLOOR-FR C/C',po:'74512A010P/74512A080P',md:'5F00',pos:2},
+        {pn:'DOOR RR INR RH',po:'82112A010P',md:'5F00',pos:3},
+        {pn:'DOOR RR INR LH',po:'82113A010P',md:'5F00',pos:4},
+        {pn:'OX PANEL TALL GATE INR',po:'5801C25657, 5859',md:'4P45',pos:5},
+        {pn:'PANEL-HEADER(D/C)',po:'93201A080P, 93222A180P',md:'5F00',pos:6},
+        {pn:'DOOR RR INR RH',po:'82112A000P',md:'5F00',pos:7},
+        {pn:'DOOR RR INR LH',po:'82113A000P',md:'5F00',pos:8},
+        {pn:'FLOOR FR',po:'74312A000P/050P/080P/120P',md:'5F00',pos:9},
+        {pn:'FLOOR FR',po:'74312D000P(010P)(020P)(030P)',md:'5K45',pos:10},
+        {pn:'PROTR HEAT FUEL TANK FR',po:'17298B020P/17298B060P',md:'5H45V',pos:11},
+        {pn:'REINF-TAIL-GATE,OTR',po:'90163D010P',md:'5K45',pos:12},
+        {pn:'STRUT RR OTR RH',po:'93358A030P',md:'5F00',pos:13},
+        {pn:'STRUT RR OTR LH',po:'93359A040P',md:'5F00',pos:13},
+        {pn:'STRUT RR OTR RH',po:'93358A040P',md:'26MY',pos:14},
+        {pn:'STRUT RR OTR LH',po:'93359A050P',md:'26MY',pos:14},
+        {pn:'FLOOR RR RR',po:'74514D000P/D010P/D030P',md:'5K45',pos:15},
+      ]
     }
   };
 
@@ -859,6 +965,51 @@
     </div>`;
   }
 
+  function buildLineDSign(key, zone) {
+    const groups = groupByModel(zone.items);
+
+    let lookupRows = '';
+    groups.forEach(([model, parts]) => {
+      lookupRows += `<tr class="model-label-row"><td colspan="3" style="background:#f0f0f0;padding:6px 8px;font-weight:700;font-size:18px;border-bottom:1px solid #ddd"><span class="dot" style="background:${zone.color};width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px"></span>${model}</td></tr>`;
+      parts.forEach(p => {
+        lookupRows += `<tr style="border-bottom:1px solid #f5f5f5"><td class="pname" style="padding:5px 8px;font-size:18px;font-weight:600">${p.pn}</td><td class="pno mono" style="padding:5px 6px;font-size:16px;color:#555">${p.po}</td><td class="loc mono" style="padding:5px 8px;font-size:18px;font-weight:700;color:${zone.color};white-space:nowrap">${key}-${p.pos}</td></tr>`;
+      });
+    });
+
+    let rows = '';
+    for (let pos = 1; pos <= 15; pos++) {
+      const parts = zone.items.filter(i => i.pos === pos);
+      if (parts.length > 0) {
+        const inner = parts.map(p =>
+          `<div class="pn">${p.pn}</div><div class="po mono">${p.po}</div><div class="md"><span>${p.md}</span></div>`
+        ).join('<div style="border-top:1px dotted #ddd;margin:3px 0"></div>');
+        rows += `<div class="lined-row occupied" style="background:${zone.color}11"><div class="lined-num">${pos}</div><div class="lined-content">${inner}</div></div>`;
+      } else {
+        rows += `<div class="lined-row empty"><div class="lined-num">${pos}</div><div class="lined-content">— ว่าง —</div></div>`;
+      }
+    }
+
+    return `
+    <div class="sign ${zone.theme}" id="sign-${key}">
+      <div class="sign-header" style="background:${zone.color}">
+        <div><div class="shelf-name">${zone.label}</div><div class="shelf-sub">พื้นที่วางข้าง Line Big Press D — C/F Storage</div></div>
+        <div class="update-box">อัปเดต: ___/___/______<br>${zone.items.length} รายการ</div>
+      </div>
+      <div class="lookup">
+        <h3>🔍 ค้นหาตาม Model → ตำแหน่ง</h3>
+        <div class="lookup-scroll"><table class="lookup-tbl">${lookupRows}</table></div>
+      </div>
+      <div class="grid-section">
+        <h3>📦 ผังพื้นที่ (เรียงจากใกล้ Line D บนสุด 1 → ล่างสุด 15)</h3>
+        <div class="lined-list">${rows}</div>
+      </div>
+      <div class="sign-footer">
+        <div class="legend"><span class="sw" style="background:${zone.color}11"></span> มี C/F &nbsp; <span class="sw" style="background:#fafafa"></span> ว่าง</div>
+        <div class="mono" style="font-size:14px;color:#aaa">รหัส: ${key} - ตำแหน่ง</div>
+      </div>
+    </div>`;
+  }
+
   const tabsEl = document.getElementById('tabs');
   const signsEl = document.getElementById('signs');
   const keys = Object.keys(SHELVES);
@@ -866,7 +1017,8 @@
     const s = SHELVES[k];
     const tab = document.createElement('button');
     tab.className = 'tab' + (i === 0 ? ' active' : '');
-    tab.textContent = `ชั้น ${k}`;
+    tab.textContent = s.label || `ชั้น ${k}`;
+    tab.dataset.key = k;
     tab.style.background = i === 0 ? s.color : '#fff';
     tab.style.color = i === 0 ? '#fff' : s.color;
     tab.style.borderColor = s.color;
@@ -883,7 +1035,7 @@
       document.getElementById('sign-' + k).classList.add('active');
     };
     tabsEl.appendChild(tab);
-    signsEl.innerHTML += buildSign(k, s);
+    signsEl.innerHTML += (s.type === 'linear' ? buildLineDSign(k, s) : buildSign(k, s));
   });
   document.querySelector('#view-signs .sign').classList.add('active');
 })();
@@ -895,7 +1047,7 @@ window.goToShelf = function(letter){
   document.getElementById('mtab-signs').click();
   var tabs = document.querySelectorAll('#tabs .tab');
   for (var i = 0; i < tabs.length; i++){
-    if (tabs[i].textContent === 'ชั้น ' + letter){ tabs[i].click(); break; }
+    if (tabs[i].dataset.key === letter){ tabs[i].click(); break; }
   }
 };
 
@@ -905,6 +1057,18 @@ document.querySelectorAll('.masterTab').forEach(function(btn){
     document.querySelectorAll('.cf-view').forEach(function(v){ v.classList.remove('active'); });
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+
+/* =========================================================
+   VIEW 3 SCRIPT — map sub-tabs (ห้องเก็บของ / โซนไลน์ผลิต)
+   ========================================================= */
+document.querySelectorAll('.map-tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.map-tab').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.map-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('map-' + btn.dataset.map).classList.add('active');
   });
 });
 </script>
