@@ -47,6 +47,11 @@
   #view-board .search-bar input:focus{border-color:#222}
   #view-board .search-bar .hint{font-size:16px;color:#999;white-space:nowrap}
 
+  #view-board .board-summary{padding:10px 24px;background:#fafafa;border-bottom:1px solid #eee;font-size:17px;color:#666;display:flex;gap:10px 18px;flex-wrap:wrap;align-items:baseline}
+  #view-board .board-summary b{font-size:23px;color:#222;font-weight:700;letter-spacing:.3px}
+  #view-board .board-summary .sep{color:#ccc;font-size:14px}
+  #view-board .board-summary .muted{color:#999}
+
   .content{padding:0 16px 16px;max-height:70vh;overflow-y:auto}
   .model-section{margin-top:12px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden}
   .model-header{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f8f8f8;border-bottom:1px solid #e0e0e0}
@@ -55,14 +60,19 @@
   .model-header .shelves-used{display:flex;gap:4px}
   .mini-badge{padding:2px 8px;border-radius:3px;font-size:18px;font-weight:700;color:#fff;letter-spacing:.5px}
 
-  table.parts-tbl{width:100%;border-collapse:collapse}
-  table.parts-tbl th{background:#fafafa;text-align:left;padding:6px 8px;font-size:18px;color:#888;font-weight:600;border-bottom:1px solid #eee;position:sticky;top:0}
-  table.parts-tbl td{padding:8px 8px;font-size:20px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+  table.parts-tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+  table.parts-tbl th{background:#fafafa;text-align:left;padding:6px 14px;font-size:18px;color:#888;font-weight:600;border-bottom:1px solid #eee;position:sticky;top:0}
+  table.parts-tbl td{padding:8px 14px;font-size:20px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+  table.parts-tbl td + td,table.parts-tbl th + th{border-left:1px solid #eee}
   table.parts-tbl tr:hover{background:#f8f8f8}
-  .col-shelf{width:54px;text-align:center}
-  .col-loc{width:92px;text-align:center}
-  .col-pn{font-weight:600;color:#111}
-  .col-po{color:#555}
+  .col-shelf{width:56px;text-align:center;padding-left:6px;padding-right:6px}
+  .col-loc{width:96px;text-align:center;padding-left:6px;padding-right:6px}
+  .col-pn{width:42%;font-weight:600;color:#111;overflow-wrap:anywhere;word-break:break-word}
+  .col-po{color:#555;overflow-wrap:anywhere;word-break:break-word}
+  @media (max-width:768px){
+    table.parts-tbl th{padding:6px 10px}
+    table.parts-tbl td{padding:7px 10px;font-size:17px}
+  }
   .shelf-dot{display:inline-block;padding:3px 8px;border-radius:3px;font-weight:700;color:#fff;font-size:18px;letter-spacing:.5px}
   .loc-code{font-weight:700;font-size:20px;letter-spacing:.5px}
 
@@ -236,6 +246,8 @@
         <span class="hint">กรองแบบ real-time</span>
       </div>
 
+      <div class="board-summary" id="boardSummary"></div>
+
       <div class="content" id="content"></div>
 
       <div class="board-footer">
@@ -263,7 +275,7 @@
   <div id="view-map" class="cf-view">
     <div class="map-tabs">
       <button class="map-tab active" data-map="storage">🏬 ห้องเก็บของ (Lab + A-E)</button>
-      <button class="map-tab" data-map="line">🏭 โซนไลน์ผลิต (Line C/D)</button>
+      <button class="map-tab" data-map="line">🏭 โซนไลน์ผลิต (Line D)</button>
     </div>
     <div class="map-board map-panel active" id="map-storage">
       <div class="map-header">
@@ -330,33 +342,32 @@
 
     <div class="map-board map-panel" id="map-line">
       <div class="map-header">
-        <h2>🏭 โซนไลน์ผลิต — Line C / Line D</h2>
+        <h2>🏭 โซนไลน์ผลิต — Line D</h2>
         <p>มุมมองจากด้านบน (Top View) — คลิกที่กล่องพื้นที่ข้าง Line D เพื่อเปิดป้ายตำแหน่ง (แยกทางเดินจากห้องเก็บของหลัก)</p>
       </div>
-      <svg class="site-map" viewBox="0 0 920 650" role="img" aria-label="ผังโซนไลน์ผลิต Line C และ Line D พร้อมพื้นที่ข้าง Line D">
-        <!-- Line C -->
-        <rect x="60" y="25" width="220" height="580" fill="#111"/>
-        <text x="170" y="315" class="map-shelf-label">Line C</text>
-
+      <svg class="site-map" viewBox="0 0 920 650" role="img" aria-label="ผังโซนไลน์ผลิต Line D พร้อมพื้นที่ข้าง Line D">
         <!-- Line D -->
-        <rect x="330" y="25" width="220" height="580" fill="#111"/>
-        <text x="440" y="315" class="map-shelf-label">Line D</text>
+        <rect x="130" y="25" width="340" height="580" fill="#111"/>
+        <text x="300" y="315" class="map-shelf-label">Line D</text>
+
+        <!-- ทางเดิน -->
+        <text x="505" y="315" class="map-aisle-label" transform="rotate(-90 505 315)">↕ ทางเดิน</text>
 
         <!-- พื้นที่ข้าง Line D (storage strip, clickable) -->
-        <rect class="map-shelf bg-LineD" x="610" y="65" width="90" height="500" tabindex="0" role="button" aria-label="เปิดป้ายพื้นที่ข้าง Line D" onclick="goToShelf('LineD')" onkeypress="if(event.key==='Enter')goToShelf('LineD')"/>
-        <text x="655" y="281" class="map-vert-label" style="pointer-events:none">
-          <tspan x="655" dy="0">ข้าง</tspan>
-          <tspan x="655" dy="34">Line</tspan>
-          <tspan x="655" dy="34">D</tspan>
+        <rect class="map-shelf bg-LineD" x="540" y="65" width="130" height="500" tabindex="0" role="button" aria-label="เปิดป้ายพื้นที่ข้าง Line D" onclick="goToShelf('LineD')" onkeypress="if(event.key==='Enter')goToShelf('LineD')"/>
+        <text x="605" y="281" class="map-vert-label" style="pointer-events:none">
+          <tspan x="605" dy="0">ข้าง</tspan>
+          <tspan x="605" dy="34">Line</tspan>
+          <tspan x="605" dy="34">D</tspan>
         </text>
 
         <!-- position direction legend: 1 (top, near Line D) -> 15 (bottom) -->
-        <rect class="map-lock-box" x="770" y="40" width="85" height="45"/>
-        <text x="812" y="69" class="map-lock-num">1</text>
-        <rect class="map-lock-box" x="770" y="540" width="85" height="45"/>
-        <text x="812" y="569" class="map-lock-num">15</text>
-        <line x1="812" y1="91" x2="812" y2="534" stroke="#333" stroke-width="2" marker-end="url(#mapArrow)"/>
-        <text x="812" y="315" class="map-lock-caption" transform="rotate(-90 812 315)">ตำแหน่ง 1 → 15</text>
+        <rect class="map-lock-box" x="740" y="40" width="90" height="45"/>
+        <text x="785" y="69" class="map-lock-num">1</text>
+        <rect class="map-lock-box" x="740" y="540" width="90" height="45"/>
+        <text x="785" y="569" class="map-lock-num">15</text>
+        <line x1="785" y1="91" x2="785" y2="534" stroke="#333" stroke-width="2" marker-end="url(#mapArrow)"/>
+        <text x="785" y="315" class="map-lock-caption" transform="rotate(-90 785 315)">ตำแหน่ง 1 → 15</text>
       </svg>
       <div class="map-legend">
         หมายเหตุ: โซนนี้อยู่คนละฝั่งทางเดินกับห้องเก็บของหลัก (Lab/A-E) — พื้นที่ข้าง Line D เป็นพื้นราบเรียงตำแหน่งเดียว ไม่มีชั้น/ล็อกแบบชั้นวาง
@@ -601,7 +612,30 @@
     return [...new Set(parts.map(p => p.s))].sort();
   }
 
+  const locOf = p => p.s === 'LineD' ? `${p.s}-${p.pos}` : `${p.s}-${p.lv}-${p.lk}`;
+
+  const GRAND_TOTAL  = ALL_ITEMS.length;
+  const GRAND_MODELS = new Set(ALL_ITEMS.map(i => i.md || '-')).size;
+
+  function renderSummary(items) {
+    const el = document.getElementById('boardSummary');
+    if (!el) return;
+    const n = items.length;
+    const models = new Set(items.map(i => i.md || '-')).size;
+    const sep = '<span class="sep">•</span>';
+    if (n === GRAND_TOTAL) {
+      el.innerHTML =
+        `<span>ทั้งหมด <b>${GRAND_TOTAL}</b> ชิ้น</span>${sep}` +
+        `<span><b>${GRAND_MODELS}</b> Model</span>`;
+    } else {
+      el.innerHTML =
+        `<span>แสดง <b>${n}</b> <span class="muted">/ ${GRAND_TOTAL}</span> ชิ้น</span>${sep}` +
+        `<span><b>${models}</b> <span class="muted">/ ${GRAND_MODELS}</span> Model</span>`;
+    }
+  }
+
   function renderGroups(items) {
+    renderSummary(items);
     const groups = groupByModel(items);
     const el = document.getElementById('content');
     if (groups.length === 0) {
@@ -616,7 +650,7 @@
       let rows = '';
       parts.sort((a,b) => a.s.localeCompare(b.s) || ((a.pos ?? a.lv) - (b.pos ?? b.lv)) || ((a.lk||0) - (b.lk||0)));
       parts.forEach(p => {
-        const loc = p.s === 'LineD' ? `${p.s}-${p.pos}` : `${p.s}-${p.lv}-${p.lk}`;
+        const loc = locOf(p);
         rows += `<tr>
           <td class="col-shelf"><span class="shelf-dot" style="background:${COLORS[p.s]}">${p.s}</span></td>
           <td class="col-pn">${p.pn}</td>
@@ -633,7 +667,7 @@
           <div class="count">${parts.length} ชิ้น</div>
         </div>
         <table class="parts-tbl">
-          <tr><th class="col-shelf">ชั้นวาง</th><th>Part Name</th><th>Part No</th><th class="col-loc">ตำแหน่ง</th></tr>
+          <tr><th class="col-shelf">ชั้นวาง</th><th class="col-pn">Part Name</th><th class="col-po">Part No</th><th class="col-loc">ตำแหน่ง</th></tr>
           ${rows}
         </table>
       </div>`;
