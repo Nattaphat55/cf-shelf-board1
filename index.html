@@ -1,10 +1,11 @@
-<title>ป้าย C/F — ค้นหาตำแหน่ง &amp; ติดหน้าชั้นวาง</title>
+<title>ป้าย C/F — ค้นหาตำแหน่ง · ติดชั้นวาง · เอาออก–เอาเข้า</title>
 <style>
   :root{
     --font-th:'Leelawadee UI','Tahoma','Segoe UI',sans-serif;
     --font-mono:'Consolas','Courier New',monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
+  [hidden]{display:none!important}
   body{background:#d0d0d0;font-family:var(--font-th);padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px}
   .mono{font-family:var(--font-mono)}
 
@@ -198,9 +199,85 @@
   .map-lock-caption{font-size:12px;fill:#888;text-anchor:middle;font-family:var(--font-th)}
   .map-legend{padding:14px 24px;border-top:1px solid #ddd;background:#f9f9f9;font-size:14px;color:#777}
 
+  /* =========================================================
+     VIEW 4 — เอาออก–เอาเข้า C/F
+     ========================================================= */
+  #view-loan .loan-wrap{background:#fff;width:920px;max-width:98vw;border:3px solid #222;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+  .loan-head{background:#222;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .loan-title{font-size:28px;font-weight:700;letter-spacing:1px}
+  .loan-sub{font-size:18px;opacity:.6;margin-top:3px}
+  .loan-status{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .loan-refresh{appearance:none;border:1px solid #fff;background:transparent;color:#fff;font-family:inherit;font-size:17px;padding:7px 16px;border-radius:6px;cursor:pointer}
+  .loan-refresh:hover{background:#fff;color:#222}
+  .loan-asof{font-size:16px;opacity:.7;white-space:nowrap}
+  .loan-setup{padding:12px 24px;background:#fff7e6;border-bottom:2px solid #f0d999;color:#8a6d1a;font-size:17px}
+  .loan-setup code{background:#f0e2bd;padding:1px 5px;border-radius:3px;font-family:var(--font-mono)}
+  .loan-tabs{display:flex;gap:4px;padding:10px 16px 0;background:#f5f5f5;border-bottom:2px solid #ddd}
+  .loan-tab{appearance:none;border:0;background:#e6e6e6;color:#666;font-family:inherit;font-size:20px;font-weight:700;padding:10px 20px;border-radius:7px 7px 0 0;cursor:pointer}
+  .loan-tab.active{background:#222;color:#fff}
+  .out-count{display:inline-block;min-width:24px;padding:0 7px;border-radius:11px;background:#c0392b;color:#fff;font-size:17px;text-align:center;margin-left:4px}
+  .loan-panel{display:none;padding:14px 16px 18px}
+  .loan-panel.active{display:block}
+  .loan-search input{width:100%;padding:10px 14px;border:2px solid #ddd;border-radius:6px;font-size:20px;font-family:inherit;outline:none}
+  .loan-search input:focus{border-color:#222}
+  .loan-list{margin-top:10px;max-height:60vh;overflow-y:auto;border:1px solid #e6e6e6;border-radius:6px}
+  .loan-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;appearance:none;border:0;border-bottom:1px solid #f0f0f0;background:#fff;padding:11px 12px;cursor:pointer;font-family:inherit}
+  .loan-item:hover{background:#f6f6f6}
+  .loan-item:last-child{border-bottom:0}
+  .li-loc{font-weight:700;font-size:20px;min-width:96px;letter-spacing:.5px}
+  .li-mid{flex:1;display:flex;flex-direction:column;min-width:0}
+  .li-pn{font-size:20px;font-weight:600;color:#111;overflow-wrap:anywhere}
+  .li-po{font-size:17px;color:#777;overflow-wrap:anywhere}
+  .li-out{color:#c0392b;font-weight:700;font-size:17px;white-space:nowrap}
+  .li-in{color:#2c7a3f;font-weight:700;font-size:17px;white-space:nowrap}
+  .loan-empty{padding:26px 12px;text-align:center;color:#aaa;font-size:19px}
+  .loan-out-list{display:flex;flex-direction:column;gap:8px}
+  .oo-card{border:1px solid #e0c0bc;background:#fdf2f1;border-radius:8px;padding:10px 14px}
+  .oo-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .oo-loc{font-weight:700;font-size:22px;color:#c0392b;letter-spacing:.5px}
+  .oo-days{font-size:17px;color:#a55}
+  .oo-pn{font-size:20px;font-weight:600;color:#111;margin-top:2px}
+  .oo-meta{font-size:17px;color:#666;margin-top:3px}
+  .oo-meta b{color:#222}
+  .row-out{display:inline-block;font-size:17px;color:#c0392b;font-weight:700;white-space:nowrap;margin-left:6px}
+  .loan-dialog-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .loan-dialog{background:#fff;border:3px solid #222;border-radius:10px;width:470px;max-width:100%;padding:20px;max-height:92vh;overflow-y:auto}
+  .ld-loc{font-size:18px;color:#888;font-weight:700}
+  .ld-pn{font-size:24px;font-weight:700;color:#111;margin-top:2px}
+  .ld-po{font-size:17px;color:#777;margin-top:2px}
+  .ld-state{margin:12px 0;padding:8px 12px;border-radius:6px;font-size:18px;font-weight:600}
+  .ld-state.is-in{background:#eaf6ee;color:#2c7a3f}
+  .ld-state.is-out{background:#fdecea;color:#c0392b}
+  .ld-field{display:block;font-size:17px;color:#555;margin-top:10px}
+  .ld-field input{display:block;width:100%;margin-top:4px;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:20px;font-family:inherit;outline:none}
+  .ld-field input:focus{border-color:#222}
+  .ld-msg{margin-top:12px;padding:9px 12px;border-radius:6px;font-size:17px;background:#fff4e5;color:#8a5a1a;border:1px solid #f0cf9c}
+  .ld-actions{display:flex;gap:10px;margin-top:18px}
+  .ld-actions button{flex:1;appearance:none;border:0;padding:13px;border-radius:7px;font-size:20px;font-weight:700;font-family:inherit;cursor:pointer}
+  .ld-cancel{background:#eee;color:#444}
+  .ld-go{background:#222;color:#fff}
+  .ld-go.is-out{background:#c0392b}
+  .ld-go.is-in{background:#2c7a3f}
+  .ld-go:disabled{opacity:.5;cursor:default}
+
+  /* สเกลตัวอักษรบนจอเล็ก — ลดลงหนึ่งขั้นเหมือน View 1 (ป้ายรวม) */
+  @media (max-width:768px){
+    .loan-title{font-size:24px}
+    .loan-sub{font-size:16px}
+    .loan-tab{font-size:18px;padding:9px 14px}
+    .loan-search input{font-size:18px}
+    .li-loc{font-size:18px;min-width:84px}
+    .li-pn,.oo-pn{font-size:18px}
+    .li-po,.li-out,.li-in,.oo-meta,.oo-days,.row-out{font-size:15px}
+    .oo-loc{font-size:20px}
+    .ld-pn{font-size:21px}
+    .ld-field input,.ld-actions button{font-size:18px}
+  }
+
   @media print{
     .masterTabs{display:none}
-    #view-board:not(.active), #view-signs:not(.active), #view-map:not(.active){display:none}
+    #view-board:not(.active), #view-signs:not(.active), #view-map:not(.active), #view-loan:not(.active){display:none}
+    .loan-dialog-bg{display:none!important}
   }
 </style>
 
@@ -211,6 +288,7 @@
       <button class="masterTab active" data-view="board" id="mtab-board">📋 ป้ายรวม — ค้นหาตำแหน่ง</button>
       <button class="masterTab" data-view="map" id="mtab-map">🗺️ แผนที่ — ตำแหน่งชั้นวาง</button>
       <button class="masterTab" data-view="signs" id="mtab-signs">🏷️ ป้ายตำแหน่ง — ติดหน้าชั้นวาง</button>
+      <button class="masterTab" data-view="loan" id="mtab-loan">🔄 เอาออก–เอาเข้า</button>
     </div>
     <div class="qr-chip">
       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0AQMAAADxGE3JAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAACeklEQVR4nO3csXHzMAyGYfhcpPQIGkWjWaNpFI2Q0oUvjEAQJCQ5uXQ5me9XJH9MPvw7HEFRFiHkPzOmmEf+7JKSiP455QnL+vOWB6+byWnG4/En97N4PvKUp3nNPU9bNoM1dzwej5chT/vMU2q8+qgf1kFNWVyDx+Pfz199OJXo8LLuPx54PB7/u9dJXxIy+kJtc4LH49/He7x+fLXqkfLwUIvLH/oXPB7fj48J5xfav+iUsfQvYXMSl8bj8ef1x9QORGp5Gcrifwoej+/Fj8mjJcaS9x+6wZjylKE+AXnm5qaWJzwef27/Kj/cn0htec39h/0HHo/vxfv5pz4g1frzdG9TNEtZ9qMM7o5H8Xh8vz6VAhNXkHb+YbH7m6G5ifsfPB5/Zj8kz9OmxCcgOuFWTi9K/+IFBo/H9+w1rh+x/rT/wJZv1efQ/+Dx+PN6z+ER6VSPRz9jc6KRF8Hj8X15v3/VGpRcf3yCeq0/7sv1rNi/4PH483ovEP6KePEWXXxI28vdh/4Fj8f36ud1wuJ/Sri/6SVmyCtZc6Op1zNmPB7/Fv5WJoXc80e+vOvqLXg8vm8vuUER8eendYOhJWbc9C/1/sS2/8Hj8f16CfrwktjL+mNDeDz+zH6fcH4x5Q/G6mxzcolL4/H4nn0btimbt0fb8xMfDN9fI7vl8Xj8+fzs/xR/xJHs/DPe3/bB0H+82r/g8fjevJWX9hU19YKmTXrZv+zfH8Xj8e/g6xZjKueXNthSOxA8Ho/f+xxbwbS9/9UqUFle8Hj86b0n1I/62TphEf/+GVv64u0JHo/v3ceE80/7rYsPZUhz9dOLtjwej+/VE/J/+QZJwLb5mewEBgAAAABJRU5ErkJggg==" alt="QR code เปิดหน้าเว็บป้าย C/F" width="64" height="64">
@@ -346,6 +424,12 @@
         <p>มุมมองจากด้านบน (Top View) — คลิกที่กล่องพื้นที่ข้าง Line D เพื่อเปิดป้ายตำแหน่ง (แยกทางเดินจากห้องเก็บของหลัก)</p>
       </div>
       <svg class="site-map" viewBox="0 0 920 650" role="img" aria-label="ผังโซนไลน์ผลิต Line D พร้อมพื้นที่ข้าง Line D">
+        <defs>
+          <!-- ต้องนิยามซ้ำในผังนี้ด้วย: ถ้าไปอ้าง marker ของผังห้องเก็บของ พอสลับแท็บแล้วผังนั้นโดน display:none หัวลูกศรจะหายไป -->
+          <marker id="mapArrowLine" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+            <path d="M0,0 L9,4.5 L0,9 Z" fill="#333"/>
+          </marker>
+        </defs>
         <!-- Line D -->
         <rect x="130" y="25" width="340" height="580" fill="#111"/>
         <text x="300" y="315" class="map-shelf-label">Line D</text>
@@ -361,16 +445,74 @@
           <tspan x="605" dy="34">D</tspan>
         </text>
 
-        <!-- position direction legend: 1 (top, near Line D) -> 15 (bottom) -->
+        <!-- ทิศเลขตำแหน่ง: ฝั่งบน = ติดเครื่อง Line D = 15, ฝั่งล่าง = ไกลสุด = 1 -->
         <rect class="map-lock-box" x="740" y="40" width="90" height="45"/>
-        <text x="785" y="69" class="map-lock-num">1</text>
+        <text x="785" y="69" class="map-lock-num">15</text>
         <rect class="map-lock-box" x="740" y="540" width="90" height="45"/>
-        <text x="785" y="569" class="map-lock-num">15</text>
-        <line x1="785" y1="91" x2="785" y2="534" stroke="#333" stroke-width="2" marker-end="url(#mapArrow)"/>
-        <text x="785" y="315" class="map-lock-caption" transform="rotate(-90 785 315)">ตำแหน่ง 1 → 15</text>
+        <text x="785" y="569" class="map-lock-num">1</text>
+        <line x1="785" y1="534" x2="785" y2="91" stroke="#333" stroke-width="2" marker-end="url(#mapArrowLine)"/>
+        <text x="785" y="315" class="map-lock-caption" transform="rotate(-90 785 315)">ตำแหน่ง 1 → 15 (15 ติดเครื่อง)</text>
       </svg>
       <div class="map-legend">
-        หมายเหตุ: โซนนี้อยู่คนละฝั่งทางเดินกับห้องเก็บของหลัก (Lab/A-E) — พื้นที่ข้าง Line D เป็นพื้นราบเรียงตำแหน่งเดียว ไม่มีชั้น/ล็อกแบบชั้นวาง
+        หมายเหตุ: โซนนี้อยู่คนละฝั่งทางเดินกับห้องเก็บของหลัก (Lab/A-E) — พื้นที่ข้าง Line D เป็นพื้นราบเรียงตำแหน่งเดียว ไม่มีชั้น/ล็อกแบบชั้นวาง — เริ่มนับจากฝั่งไกล Line D (1 = ไกลสุด, 15 = ติดเครื่อง)
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       VIEW 4 — เอาออก–เอาเข้า C/F
+       ========================================================= -->
+  <div id="view-loan" class="cf-view">
+    <div class="loan-wrap">
+      <div class="loan-head">
+        <div>
+          <div class="loan-title">🔄 เอาออก–เอาเข้า C/F</div>
+          <div class="loan-sub">หยิบออกจากชั้น = กด “เอาออก” · เอากลับเข้าชั้น = กด “เอาเข้า” · รหัส: ชั้นวาง-ชั้นที่-ล็อก</div>
+        </div>
+        <div class="loan-status">
+          <button type="button" id="loanRefresh" class="loan-refresh">⟳ รีเฟรช</button>
+          <div id="loanAsOf" class="loan-asof">—</div>
+        </div>
+      </div>
+
+      <div id="loanSetup" class="loan-setup" hidden>
+        ⚠️ ยังไม่ได้ตั้งค่าที่เก็บข้อมูล — เปิดไฟล์ <code>cf-board.html</code> ใส่ลิงก์ Apps Script ที่ตัวแปร <code>LOAN_API</code> (ดูคู่มือ <code>SETUP-ยืมคืน.md</code>)
+      </div>
+
+      <div class="loan-tabs">
+        <button type="button" class="loan-tab active" data-loan="pick">📤 ทำรายการ</button>
+        <button type="button" class="loan-tab" data-loan="out">📋 อยู่นอกชั้นวาง <span id="outCount" class="out-count">0</span></button>
+      </div>
+
+      <div class="loan-panel active" id="loan-pick">
+        <div class="loan-search">
+          <input type="text" id="loanSearch" placeholder="ค้น Model / Part Name / Part No / ตำแหน่ง…" oninput="loanFilter()">
+        </div>
+        <div class="loan-list" id="loanList"></div>
+      </div>
+
+      <div class="loan-panel" id="loan-out">
+        <div class="loan-out-list" id="loanOutList"></div>
+      </div>
+    </div>
+
+    <div class="loan-dialog-bg" id="loanDlgBg" hidden>
+      <div class="loan-dialog" role="dialog" aria-modal="true" aria-label="ทำรายการเอาออก–เอาเข้า">
+        <div class="ld-loc mono" id="ldLoc"></div>
+        <div class="ld-pn" id="ldPn"></div>
+        <div class="ld-po mono" id="ldPo"></div>
+        <div class="ld-state" id="ldState"></div>
+        <label class="ld-field">ชื่อผู้ทำรายการ
+          <input type="text" id="ldPerson" autocomplete="name" enterkeyhint="done">
+        </label>
+        <label class="ld-field">หมายเหตุ (ถ้ามี)
+          <input type="text" id="ldNote">
+        </label>
+        <div class="ld-msg" id="ldMsg" hidden></div>
+        <div class="ld-actions">
+          <button type="button" class="ld-cancel" id="ldCancel">ยกเลิก</button>
+          <button type="button" class="ld-go" id="ldGo"></button>
+        </div>
       </div>
     </div>
   </div>
@@ -378,6 +520,14 @@
 </div>
 
 <script>
+
+/* ---- shared helpers: ตัวช่วยที่ View 1 และ View 4 ใช้ร่วมกัน ---- */
+window.CF_COLORS = {A:'#1a3a5c',B:'#5c1a3a',C:'#2c5a3a',D:'#5a4a1a',E:'#3a2c5a',LineD:'#b34700'};
+window.cfLoc = function(i){ return i.s === 'LineD' ? (i.s + '-' + i.pos) : (i.s + '-' + i.lv + '-' + i.lk); };
+window.cfKey = function(i){ return window.cfLoc(i) + '\u00b7' + (i.po || '-') + '\u00b7' + i.pn; };
+window.cfEsc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+window.CF_STATUS = {};
+
 /* =========================================================
    VIEW 1 SCRIPT — ป้ายรวม C/F (ค้นหาตำแหน่ง)
    ========================================================= */
@@ -512,8 +662,9 @@
     {s:'D',pn:'RNF 2ND SEAT STRIKER LH',po:'5253C691',md:'4P45',lv:1,lk:1},
     {s:'D',pn:'REINF-RR FLOOR',po:'745A6A020P',md:'5F00',lv:1,lk:1},
     {s:'D',pn:'REINF R/DR UPR LATCH RH',po:'821G4A020P',md:'5F00',lv:1,lk:1},
-    {s:'D',pn:'REINF BACKBONE SIDE RH',po:'5251D490',md:'4P45',lv:1,lk:2},
-    {s:'D',pn:'REINF BACKBONE SIDE LH',po:'5251D489',md:'4P45',lv:1,lk:2},
+    {s:'D',pn:'REINF BACKBONE SIDE RH',po:'5251D490/776F0W010P',md:'4P45',lv:1,lk:2},
+    {s:'D',pn:'REINF BACKBONE SIDE LH',po:'5251D489/776F0W020P',md:'4P45',lv:1,lk:2},
+    {s:'D',pn:'C/MBR 2ND SPLIT RR',po:'-',md:'-',lv:1,lk:2},
     {s:'D',pn:'RNF T/GATE CORNER RH',po:'5801A402',md:'CR45',lv:1,lk:2},
     {s:'D',pn:'RNF T/GATE CORNER LH',po:'5801A401',md:'CR46',lv:1,lk:2},
     {s:'D',pn:'SASH ASSY R/DR WDO FR LH',po:'5735A557',md:'4P00',lv:1,lk:2},
@@ -579,24 +730,26 @@
     {s:'E',pn:'FR FENDER PNL (LH)',po:'KS-N136443/4-0',md:'CR KJ-52',lv:4,lk:3},
 
     // ===== ข้าง LINE D =====
-    {s:'LineD',pn:'FLOOR RR (SG)',po:'74512A040P, 050P',md:'5F00',pos:1},
-    {s:'LineD',pn:'FLOOR-FR C/C',po:'74512A010P/74512A080P',md:'5F00',pos:2},
-    {s:'LineD',pn:'DOOR RR INR RH',po:'82112A010P',md:'5F00',pos:3},
-    {s:'LineD',pn:'DOOR RR INR LH',po:'82113A010P',md:'5F00',pos:4},
-    {s:'LineD',pn:'OX PANEL TALL GATE INR',po:'5801C25657, 5859',md:'4P45',pos:5},
-    {s:'LineD',pn:'PANEL-HEADER(D/C)',po:'93201A080P, 93222A180P',md:'5F00',pos:6},
-    {s:'LineD',pn:'DOOR RR INR RH',po:'82112A000P',md:'5F00',pos:7},
+    {s:'LineD',pn:'FLOOR RR (SG)',po:'74512A040P, 050P',md:'5F00',pos:15},
+    {s:'LineD',pn:'FLOOR-FR C/C',po:'74512A010P/74512A080P',md:'5F00',pos:14},
+    {s:'LineD',pn:'DOOR RR INR RH',po:'82112A010P',md:'5F00',pos:13},
+    {s:'LineD',pn:'DOOR RR INR LH',po:'82113A010P',md:'5F00',pos:12},
+    {s:'LineD',pn:'OX PANEL TALL GATE INR',po:'5801C25657, 5859',md:'4P45',pos:11},
+    {s:'LineD',pn:'PANEL-HEADER(D/C)',po:'93201A080P, 93222A180P',md:'5F00',pos:10},
+    {s:'LineD',pn:'DOOR RR INR RH',po:'82112A000P',md:'5F00',pos:9},
     {s:'LineD',pn:'DOOR RR INR LH',po:'82113A000P',md:'5F00',pos:8},
-    {s:'LineD',pn:'FLOOR FR',po:'74312A000P/050P/080P/120P',md:'5F00',pos:9},
-    {s:'LineD',pn:'FLOOR FR',po:'74312D000P(010P)(020P)(030P)',md:'5K45',pos:10},
-    {s:'LineD',pn:'PROTR HEAT FUEL TANK FR',po:'17298B020P/17298B060P',md:'5H45V',pos:11},
-    {s:'LineD',pn:'REINF-TAIL-GATE,OTR',po:'90163D010P',md:'5K45',pos:12},
-    {s:'LineD',pn:'STRUT RR OTR RH',po:'93358A030P',md:'5F00',pos:13},
-    {s:'LineD',pn:'STRUT RR OTR LH',po:'93359A040P',md:'5F00',pos:13},
-    {s:'LineD',pn:'STRUT RR OTR RH',po:'93358A040P',md:'26MY',pos:14},
-    {s:'LineD',pn:'STRUT RR OTR LH',po:'93359A050P',md:'26MY',pos:14},
-    {s:'LineD',pn:'FLOOR RR RR',po:'74514D000P/D010P/D030P',md:'5K45',pos:15},
+    {s:'LineD',pn:'FLOOR FR',po:'74312A000P/050P/080P/120P',md:'5F00',pos:7},
+    {s:'LineD',pn:'FLOOR FR',po:'74312D000P(010P)(020P)(030P)',md:'5K45',pos:6},
+    {s:'LineD',pn:'PROTR HEAT FUEL TANK FR',po:'17298B020P/17298B060P',md:'5H45V',pos:5},
+    {s:'LineD',pn:'REINF-TAIL-GATE,OTR',po:'90163D010P',md:'5K45',pos:4},
+    {s:'LineD',pn:'STRUT RR OTR RH',po:'93358A030P',md:'5F00',pos:3},
+    {s:'LineD',pn:'STRUT RR OTR LH',po:'93359A040P',md:'5F00',pos:3},
+    {s:'LineD',pn:'STRUT RR OTR RH',po:'93358A040P',md:'26MY',pos:2},
+    {s:'LineD',pn:'STRUT RR OTR LH',po:'93359A050P',md:'26MY',pos:2},
+    {s:'LineD',pn:'FLOOR RR RR',po:'74514D000P/D010P/D030P',md:'5K45',pos:1},
   ];
+
+  window.CF_ITEMS = ALL_ITEMS;   // แหล่งข้อมูลชิ้นส่วนชุดเดียวของทั้งหน้า
 
   function groupByModel(items) {
     const g = {};
@@ -653,7 +806,7 @@
         const loc = locOf(p);
         rows += `<tr>
           <td class="col-shelf"><span class="shelf-dot" style="background:${COLORS[p.s]}">${p.s}</span></td>
-          <td class="col-pn">${p.pn}</td>
+          <td class="col-pn">${p.pn}${(window.CF_STATUS && window.CF_STATUS[window.cfKey(p)]) ? ` <span class="row-out">🔴 อยู่นอกชั้นวาง</span>` : ''}</td>
           <td class="col-po mono">${p.po}</td>
           <td class="col-loc"><span class="loc-code mono" style="color:${COLORS[p.s]}">${loc}</span></td>
         </tr>`;
@@ -675,17 +828,18 @@
     el.innerHTML = html;
   }
 
+  let currentItems = ALL_ITEMS;
   window.filterAll = function filterAll() {
     const q = document.getElementById('searchInput').value.trim().toUpperCase();
-    if (!q) { renderGroups(ALL_ITEMS); return; }
-    const filtered = ALL_ITEMS.filter(i =>
+    currentItems = !q ? ALL_ITEMS : ALL_ITEMS.filter(i =>
       i.md.toUpperCase().includes(q) ||
       i.pn.toUpperCase().includes(q) ||
       i.po.toUpperCase().includes(q)
     );
-    renderGroups(filtered);
+    renderGroups(currentItems);
   };
 
+  window.CF_refreshBoard = function(){ renderGroups(currentItems); };
   renderGroups(ALL_ITEMS);
 })();
 
@@ -693,239 +847,25 @@
    VIEW 2 SCRIPT — ป้ายตำแหน่ง C/F (ติดหน้าชั้นวาง)
    ========================================================= */
 (function(){
-  const SHELVES = {
-    A: {
-      color: '#1a3a5c', theme: 'theme-A',
-      items: [
-        {pn:'MBR-CROSS. 4TH C/C',po:'75442A010P',md:'5F00',lock:1,level:1},
-        {pn:'MBR-CROSS. 4TH',po:'75442A030P',md:'5F00',lock:1,level:1},
-        {pn:'REINF ASSY-ROPEHOOK RH',po:'933C0A060P',md:'5F00',lock:1,level:1},
-        {pn:'REINF ASSY-ROPEHOOK LH',po:'933C1A060P',md:'5F00',lock:1,level:1},
-        {pn:'BOW ROOF RR RR',po:'5920C907/909',md:'4P45',lock:2,level:1},
-        {pn:'BOW ROOF RR',po:'5290CB76',md:'4P45',lock:2,level:1},
-        {pn:'BOW ROOF CTR',po:'5280C870',md:'4P45',lock:2,level:1},
-        {pn:'C/MBR RR END INR SIDE RH',po:'5257B048',md:'4P45',lock:2,level:1},
-        {pn:'C/MBR RR END INR SIDE LH',po:'5257B047',md:'4P45',lock:2,level:1},
-        {pn:'C/NBR RR END INR CTR',po:'5257A695',md:'4P45',lock:3,level:1},
-        {pn:'EXT-FR FLOOR',po:'74314A010P',md:'5F00',lock:3,level:1},
-        {pn:'BOLS FLOOR FR',po:'93612A070P',md:'5F00',lock:3,level:1},
-        {pn:'REINF RR AIR SPOILER',po:'96044A010P',md:'5F00',lock:3,level:1},
-        {pn:'STPNR RR DR OTR RH',po:'82154 5EK0A',md:'L02D',lock:1,level:2},
-        {pn:'STPNR RR DR OTR LH',po:'82155 5EK0A',md:'L02D',lock:1,level:2},
-        {pn:'REINF PR DR OTR WAIST LH',po:'82149 5EK0A',md:'L02D',lock:1,level:2},
-        {pn:'STFNR -FR DR OTR LH',po:'80155 5EK0A',md:'L02D',lock:1,level:2},
-        {pn:'STFNR -FR DR OTR RH',po:'80154 5EK0A',md:'L02D',lock:1,level:2},
-        {pn:'REINF PR DR OTR WAIST LH',po:'82148 5EK0A',md:'L02D',lock:1,level:2},
-        {pn:'TEMP REINF RR DR HINGE UPR RH',po:'82118 5EK0A',md:'L02D',lock:2,level:2},
-        {pn:'TEMP REINF RR DR HINGE UPR LH',po:'82119 5EK0A',md:'L02D',lock:2,level:2},
-        {pn:'RNF 2ND SEAT SIDE RH',po:'5251A896',md:'CR45',lock:2,level:2},
-        {pn:'RNF 2ND SEAT SIDE LH',po:'5252A897',md:'CR45',lock:2,level:2},
-        {pn:'SILL CROSS 1ST ENTER',po:'6710A161/162',md:'4P00(MMTh)',lock:2,level:2},
-        {pn:'REINF FR DR HINGE LWR RH',po:'80126 5EK0A',md:'L02D',lock:2,level:2},
-        {pn:'REINF FR DR HINGE LWR LH',po:'80127 5EK0A',md:'L02D',lock:2,level:2},
-        {pn:'C/MBR RR END OTR LH',po:'5250A709',md:'4P45',lock:3,level:2},
-        {pn:'C/MBR RR END OTR RH',po:'5250A710',md:'4P45',lock:3,level:2},
-        {pn:'EXT.QTR INR LWR RR LH',po:'5301G383',md:'4P45',lock:3,level:2},
-        {pn:'EXT.QTR INR LWR RR RH',po:'5301G384',md:'4P45',lock:3,level:2},
-        {pn:'EXT ASSY SIDE GATE INR RR RH',po:'6722A708/712',md:'19MY',lock:1,level:3},
-        {pn:'HOUSING RR LAMP LH',po:'5281A353',md:'4P00',lock:1,level:3},
-        {pn:'STAY S/SKIRT PANEL RR LH',po:'6748A099/101',md:'4P00',lock:1,level:3},
-        {pn:'REINF SIDE GATE RR RH',po:'6722A658',md:'4P00(19MY)',lock:1,level:3},
-        {pn:'REINF SIDE GATE RR LH',po:'6722A657',md:'4P00(19MY)',lock:1,level:3},
-        {pn:'PANEL SIDE GATE RR LH',po:'6722A269/405',md:'4P00',lock:1,level:3},
-        {pn:'PANEL SIDE GATE RR RH',po:'6722A270/406',md:'4P00',lock:1,level:3},
-        {pn:'EXT ASSY SIDE GATE INR RR LH',po:'6722A707/711',md:'19MY',lock:1,level:3},
-        {pn:'SILLR FLR SIDE INR LH',po:'5253M329',md:'4P00',lock:2,level:3},
-        {pn:'HOUSING RR LAMP RH',po:'5281A354',md:'4P00',lock:2,level:3},
-        {pn:'BOARD RR BODY HEADER',po:'6720A051/083',md:'4P00',lock:2,level:3},
-        {pn:'REINF BACK BONE',po:'MN136061-4',md:'3EOO(KAOT)',lock:2,level:3},
-        {pn:'COVER-ENG RR',po:'74811A000P/010P',md:'5F00',lock:3,level:3},
-        {pn:'RE INF F/DR BELT LINE OTR LH',po:'57008619',md:'4P00',lock:3,level:3},
-        {pn:'RE INF F/DR BELT LINE OTR RH',po:'57008620',md:'4P00',lock:3,level:3},
-        {pn:'STAY S/SKIRT PANEL RR LH',po:'6758A19/6748A221',md:'4P00',lock:1,level:4},
-        {pn:'STAY S/SKIRT PANEL RR RH',po:'6748A220/222',md:'4P00',lock:1,level:4},
-        {pn:'REINF 2ND SEAT CTR',po:'5851A703',md:'CR45',lock:1,level:4},
-        {pn:'REINF SIDE GATE FR LH',po:'6722A681',md:'4P00(19MY)',lock:1,level:4},
-        {pn:'REINF SIDE GATE FR RH',po:'6722A682',md:'4P00(19MY)',lock:1,level:4},
-        {pn:'SILLR FLR SIDE INR RH',po:'5253M330',md:'4P00',lock:1,level:4},
-        {pn:'PNL,RR GATE OTR',po:'ST-57W0490-000',md:'MMTh SU',lock:2,level:4},
-        {pn:'PANEL, ROOF',po:'ST-58Y0190-000',md:'MMTh SU27',lock:3,level:4},
-        {pn:'PANEL SIDE INR LH',po:'93381A010P',md:'MY26',lock:1,level:5},
-        {pn:'PANEL-SIDE, OTR LH',po:'93313A290P',md:'26MY(SWB)',lock:2,level:5},
-        {pn:'PANEL-SIDE, OTR RH',po:'93312A240P',md:'26MY(SWB)',lock:3,level:5},
-      ]
-    },
-    B: {
-      color: '#5c1a3a', theme: 'theme-B',
-      items: [
-        {pn:'PANEL SIDE INR RH',po:'93381A020P',md:'MY26',lock:1,level:5},
-        {pn:'PANEL,R/DR INR (RH)',po:'ST-62M1290-000',md:'QX MMTH',lock:2,level:5},
-      ]
-    },
-    C: {
-      color: '#2c5a3a', theme: 'theme-C',
-      items: [
-        {pn:'REINF BACKBONE',po:'74366W010P',md:'4L45V',lock:1,level:1},
-        {pn:'REINF RR FLOOR C/C',po:'745A8A010P',md:'5F00',lock:1,level:1},
-        {pn:'COVER-FR UNDER',po:'50812A000P/50810A010P',md:'5F00',lock:1,level:1},
-        {pn:'COVER-FR UNDER',po:'50812A020P',md:'5F00',lock:1,level:1},
-        {pn:'RAIL,ROOF FRONT',po:'5290C480',md:'4P00',lock:2,level:1},
-        {pn:'REINF SUN ROOF',po:'5290D003',md:'4P45',lock:2,level:1},
-        {pn:'REINF HOOD LOCK UPR',po:'5900B048',md:'-',lock:3,level:1},
-        {pn:'REINF,RR/DR HINGE LH/RH',po:'5730B283/284',md:'4P00',lock:3,level:1},
-        {pn:'BOW ROOF CTR RR',po:'5290C906(873)',md:'4P45',lock:3,level:1},
-        {pn:'REINF R DR BELT LINE OTR',po:'5730B279-80',md:'4P47',lock:3,level:1},
-        {pn:'PANEL SIDE GATE INR FR UPR LH',po:'6722A229',md:'4P00',lock:4,level:1},
-        {pn:'REINF RR GATE INR LH',po:'6724A073',md:'4P00',lock:4,level:1},
-        {pn:'REINF RR GATE INR RH',po:'6724A074',md:'4P00',lock:4,level:1},
-        {pn:'RAIL-UPR GUARD FRAME',po:'93114A040P',md:'5F00',lock:1,level:2},
-        {pn:'RENL HEADER PANEL',po:'93114A050P',md:'5F00',lock:1,level:2},
-        {pn:'PANEL RR GATE OTR',po:'93412A810P',md:'5F00',lock:1,level:2},
-        {pn:'REINF RR SEATBELT ANCH(D/C)',po:'76686A020P',md:'5F00',lock:1,level:2},
-        {pn:'C/MBR BACK BONE FR',po:'MN136030-2',md:'3EOO(KAOT)',lock:2,level:2},
-        {pn:'REINF FR DR INR WAIST RH',po:'80142A000P',md:'5F00',lock:2,level:2},
-        {pn:'REINF FR DR INR WAIST LH',po:'80143A000P',md:'MMTH',lock:2,level:2},
-        {pn:'C/MBR RR END TRC TR',po:'5257A697',md:'4P45',lock:2,level:2},
-        {pn:'RAIL UPR GUARD FRAME',po:'93114A000P',md:'5F00',lock:2,level:2},
-        {pn:'BRKT CTR CONSOLE',po:'743G6W050P',md:'4L45V',lock:3,level:2},
-        {pn:'TRAY BATTERY',po:'5220HW040P/5220HB010P',md:'5H45V',lock:3,level:2},
-        {pn:'C/MBR RR END UPR',po:'5257A467',md:'4P45',lock:3,level:2},
-        {pn:'PANEL RR WHEELHOUSE INR LH',po:'5228A31/315',md:'4P45',lock:4,level:2},
-        {pn:'PANEL RR WHEELHOUSE INR RH',po:'5228A314/316',md:'4P45',lock:4,level:2},
-        {pn:'STRUT FR OTR LH',po:'93339A010P',md:'5F00',lock:1,level:3},
-        {pn:'STRUT FR OTR RH',po:'93338A010P',md:'5F00',lock:1,level:3},
-        {pn:'STRUT FR OTR RH',po:'93338A000P',md:'5F00',lock:1,level:3},
-        {pn:'STRUT FR OTR LH',po:'93339A000P',md:'5F00',lock:1,level:3},
-        {pn:'STRUT FR OTR RH (S/C)',po:'93338A020P',md:'5F00',lock:2,level:3},
-        {pn:'STRUT FR OTR LH (S/C)',po:'93339A020P',md:'5F00',lock:2,level:3},
-        {pn:'REINF RR DOOR HINGE D/CAB RH',po:'82126A010P',md:'5F00',lock:2,level:3},
-        {pn:'REINF RR DOOR HINGE D/CAB LH',po:'82127A010P',md:'5F00',lock:2,level:3},
-        {pn:'BOW ROOF FR',po:'5290 867',md:'4P45',lock:3,level:3},
-        {pn:'REINF RR DR BELT LINE INR RH',po:'82142A000P',md:'5F00',lock:3,level:3},
-        {pn:'REINF RR DR BELT LINE INR LH',po:'82143A000P',md:'5F00',lock:3,level:3},
-        {pn:'REINF HEADER PANEL',po:'93248A00P',md:'5F00',lock:3,level:3},
-        {pn:'REINF RR DOOR OTR WAIST LH',po:'82149A010P',md:'5F00',lock:4,level:3},
-        {pn:'REINF RR DOOR OTR WAIST RH',po:'82148A010P',md:'5F00',lock:4,level:3},
-        {pn:'C/MBR RR FLR OTR',po:'5253Z000/AB40',md:'4P45',lock:4,level:3},
-        {pn:'REINF RR DOOR OTR RH',po:'82148A030P',md:'5F47C',lock:3,level:4},
-        {pn:'REINF RR DOOR OTR LH',po:'82149A030P',md:'5F47C',lock:3,level:4},
-        {pn:'FENDER LH',po:'6C5265271',md:'D31C',lock:4,level:4},
-        {pn:'FENDER RH',po:'6C5265272',md:'D31C',lock:4,level:4},
-        {pn:'REINF RR W/HSE INR LWR RH',po:'6722A678/680',md:'4P00 19MY',lock:4,level:4},
-        {pn:'REINF RR W/HSE INR LWR LH',po:'6722A677/679',md:'4P00 19MY',lock:4,level:4},
-        {pn:'PANEL,R/DR INR LH',po:'ST-62M0290-000',md:'QX MMTh',lock:1,level:5},
-        {pn:'REINF RR W/HSE INR LWP LH',po:'6722A655',md:'19MY',lock:2,level:5},
-        {pn:'REINF RR W/HSE INR LWP RH',po:'6722A656',md:'19MY',lock:2,level:5},
-        {pn:'MBR ASSY DASH LWR CROSS CTR',po:'67402 5KE0A',md:'L02D',lock:2,level:5},
-        {pn:'PANEL.SIDE.OTR RR BODY LH',po:'KS-180 200 193-00',md:'KJ-506',lock:3,level:5},
-        {pn:'PNL SIDE OTR RR BODY C/FIX RH',po:'KS-N146377/8-0',md:'CR KJ-66',lock:4,level:5},
-      ]
-    },
-    D: {
-      color: '#5a4a1a', theme: 'theme-D',
-      items: [
-        {pn:'REINF T/GATE HINGE RH',po:'5801C249',md:'4P45(20MY)',lock:1,level:1},
-        {pn:'REINF T/GATE HINGE LH',po:'5801C247',md:'4P45(20MY)',lock:1,level:1},
-        {pn:'REINF BACKBONE RR',po:'52510485',md:'4P45',lock:1,level:1},
-        {pn:'RNF 2ND SEAT STRIKER RH',po:'5253C692',md:'4P45',lock:1,level:1},
-        {pn:'REINF R/DR UPR LATCH LH',po:'821G5A020P',md:'5F00',lock:1,level:1},
-        {pn:'RNF 2ND SEAT STRIKER LH',po:'5253C691',md:'4P45',lock:1,level:1},
-        {pn:'REINF-RR FLOOR',po:'745A6A020P',md:'5F00',lock:1,level:1},
-        {pn:'REINF R/DR UPR LATCH RH',po:'821G4A020P',md:'5F00',lock:1,level:1},
-        {pn:'REINF BACKBONE SIDE RH',po:'5251D490/776F0W010P',md:'4P45',lock:2,level:1},
-        {pn:'REINF BACKBONE SIDE LH',po:'5251D489/776F0W020P',md:'4P45',lock:2,level:1},
-        {pn:'C/MBR 2ND SPLIT RR',po:'-',md:'-',lock:2,level:1},
-        {pn:'RNF T/GATE CORNER RH',po:'5801A402',md:'CR45',lock:2,level:1},
-        {pn:'RNF T/GATE CORNER LH',po:'5801A401',md:'CR46',lock:2,level:1},
-        {pn:'SASH ASSY R/DR WDO FR LH',po:'5735A557',md:'4P00',lock:2,level:1},
-        {pn:'SASH ASSY R/DR WDO FR RH',po:'5735A558',md:'4P00',lock:2,level:1},
-        {pn:'REINF BOLS 1ST (D/C)',po:'93614A060P',md:'5F00',lock:3,level:1},
-        {pn:'MBR CROSS FR SEAT MTG FR LH',po:'74333A000P',md:'5F00',lock:4,level:1},
-        {pn:'MBR CROSS FR SEAT MTG RR LH',po:'75433A000R',md:'5F00',lock:4,level:1},
-        {pn:'MBR CROSS FR MTG RR RH',po:'75432A000P',md:'5F00',lock:4,level:1},
-        {pn:'MBR CROSS FR SEAT MTG FR RH',po:'74332A000P',md:'5F00',lock:4,level:1},
-        {pn:'PANEL HOOD ING',po:'13E45 150.242.08',md:'KGOW',lock:3,level:3},
-        {pn:'PANEL QTR INR UPR LH',po:'5301G297/298/299/230',md:'4P45',lock:4,level:3},
-        {pn:'PANEL QTR INR UPR RH',po:'5301G297/298/299/230',md:'4P45',lock:4,level:3},
-        {pn:'FLOOR CENTER PANEL FRONT',po:'82646319/320',md:'P9218',lock:1,level:4},
-        {pn:'FIREWALL CENTER LNSD CAB',po:'82635173',md:'P9218',lock:2,level:4},
-        {pn:'RR DOOR INNER L',po:'5730B267',md:'4P47',lock:4,level:4},
-        {pn:'RR DOOR INNER R',po:'5730B269',md:'4P47',lock:4,level:4},
-        {pn:'PANEL REAR GATE OTR',po:'674A069-72/104-107',md:'4P00',lock:1,level:5},
-        {pn:'REINF RR SEAT BACK',po:'5281A425/426',md:'4P00',lock:1,level:5},
-        {pn:'C/MBR RR END UPR',po:'5257A174',md:'CR45',lock:1,level:5},
-        {pn:'PANEL, F/DR INR LH',po:'ST-59L0290-000',md:'MMTh SU47C',lock:2,level:5},
-        {pn:'PANEL, F/DR OTR LH',po:'ST-59L0190-000',md:'MMTh SU47C',lock:3,level:5},
-        {pn:'REINF RR DOOR HINGE UPR RH',po:'82118 5EKOA',md:'L02D',lock:4,level:5},
-        {pn:'REINF RR DOOR HINGE UPR LH',po:'82119 5EKOA',md:'L02D',lock:4,level:5},
-        {pn:'RAIL-HEADER PANEL UPR',po:'932224010P,160P,180P,190P,200P,230P,280P,290P2',md:'5F00',lock:1,level:1},
-        {pn:'STRUT RR INR LH',po:'93357A000P',md:'5F00',lock:1,level:2},
-        {pn:'STRUT RR INR RH',po:'93356A020P',md:'5F00',lock:1,level:2},
-        {pn:'STRUT RR INR LH',po:'93357A020P',md:'5F00',lock:1,level:2},
-        {pn:'STRUT RR INR RH',po:'93356A070P',md:'26MY',lock:1,level:2},
-        {pn:'STRUT RR INR LH (C/C)',po:'93357A050P',md:'5F00',lock:1,level:2},
-        {pn:'STRUT-RR, INR RH (D/C)',po:'93356A140P',md:'5F00(27MY)',lock:1,level:2},
-        {pn:'REINF HEADER PANEL',po:'93248AC10P',md:'5F00',lock:3,level:2},
-        {pn:'REINF RR GATE',po:'93449A160P',md:'5F00',lock:3,level:2},
-        {pn:'BOLS-FLOOR CTR (D/C, C/C, S/C)',po:'93622A050P/060P',md:'5F00',lock:3,level:2},
-        {pn:'BOLS FLOOR 2ND',po:'93622A020P',md:'5F00',lock:3,level:2},
-        {pn:'REINF TAIL GATE HINGE RH',po:'90136D000P',md:'5K45',lock:4,level:2},
-        {pn:'REINF-TAIL GATE LOCK',po:'90148D000P',md:'5K45',lock:4,level:2},
-        {pn:'REINF-BOLS 2ND',po:'93615A050P',md:'5F00',lock:4,level:2},
-        {pn:'REINF BOLS 1ST LH',po:'93615A160P',md:'5F00',lock:4,level:2},
-        {pn:'REINF-BOLS 4TH',po:'93644A000P',md:'5F00',lock:4,level:2},
-        {pn:'REINF TAIL GATE HINGE LH',po:'90137D000P',md:'5K45',lock:4,level:2},
-        {pn:'INSUL-ENG COVER HEAT RH',po:'74740W070P',md:'4P45',lock:1,level:5},
-      ]
-    },
-    E: {
-      color: '#3a2c5a', theme: 'theme-E',
-      items: [
-        {pn:'FENDER FRONT LH',po:'S7-62R0190-000',md:'QX MMTh',lock:1,level:1},
-        {pn:'COWL TOP',po:'663125EKOA',md:'L02D',lock:1,level:1},
-        {pn:'FENDER FRONT RH',po:'ST-62R0190-000',md:'QX MMTh',lock:2,level:1},
-        {pn:'BOLS FLOOR 3RD',po:'93632A080P/90P',md:'5F00',lock:3,level:1},
-        {pn:'CF BOLS FLOOR FR',po:'93612A180P',md:'5F00',lock:3,level:1},
-        {pn:'BOLS FLOOR 3RD',po:'93632A040P/070P',md:'5F00',lock:3,level:1},
-        {pn:'PANEL ROOF C/FIX',po:'KS-N146613/4-0',md:'CR(D/C) KJ-22',lock:4,level:1},
-        {pn:'PANEL RR GATE INR (D/C)',po:'93414A050P/020P',md:'5F00',lock:1,level:2},
-        {pn:'PANEL RR GATE INR',po:'93414A060P/030P',md:'5F00',lock:2,level:2},
-        {pn:'PANEL REAR D/CAB',po:'5281A455/456',md:'4P00',lock:1,level:4},
-        {pn:'FIREWALL CENTER LNSD CAB',po:'82635671',md:'P9218',lock:4,level:4},
-        {pn:'PANEL ROOF D/C',po:'5290C477/479',md:'4P00',lock:1,level:5},
-        {pn:'PANEL SIDEGATE INR LH',po:'ST-95W1590-000',md:'Z0SU47',lock:2,level:5},
-        {pn:'PANEL SIDEGATE INR LH',po:'ST-58W1590-000',md:'MMTh SU27',lock:3,level:5},
-        {pn:'PANEL SIDEGATE INR RH',po:'ST-57W1590-000',md:'MMTh SU47',lock:4,level:5},
-        {pn:'REINF RR SEATBELT ANCH (D/C)',po:'76686A020P',md:'5F00',lock:3,level:2},
-        {pn:'PANEL-HEADER',po:'93201A130P, 93201A120P',md:'5F00',lock:3,level:2},
-        {pn:'PANAL FR',po:'53311W040',md:'-',lock:4,level:2},
-        {pn:'PANEL REAR GATE OTR',po:'674A069-72/104-107/128-131',md:'4P00',lock:2,level:4},
-        {pn:'FR FENDER PNL (LH)',po:'KS-N136443/4-0',md:'CR KJ-52',lock:3,level:4},
-      ]
-    },
-    LineD: {
-      color: '#b34700', theme: 'theme-LineD', type: 'linear', label: 'ข้าง Line D',
-      items: [
-        {pn:'FLOOR RR (SG)',po:'74512A040P, 050P',md:'5F00',pos:1},
-        {pn:'FLOOR-FR C/C',po:'74512A010P/74512A080P',md:'5F00',pos:2},
-        {pn:'DOOR RR INR RH',po:'82112A010P',md:'5F00',pos:3},
-        {pn:'DOOR RR INR LH',po:'82113A010P',md:'5F00',pos:4},
-        {pn:'OX PANEL TALL GATE INR',po:'5801C25657, 5859',md:'4P45',pos:5},
-        {pn:'PANEL-HEADER(D/C)',po:'93201A080P, 93222A180P',md:'5F00',pos:6},
-        {pn:'DOOR RR INR RH',po:'82112A000P',md:'5F00',pos:7},
-        {pn:'DOOR RR INR LH',po:'82113A000P',md:'5F00',pos:8},
-        {pn:'FLOOR FR',po:'74312A000P/050P/080P/120P',md:'5F00',pos:9},
-        {pn:'FLOOR FR',po:'74312D000P(010P)(020P)(030P)',md:'5K45',pos:10},
-        {pn:'PROTR HEAT FUEL TANK FR',po:'17298B020P/17298B060P',md:'5H45V',pos:11},
-        {pn:'REINF-TAIL-GATE,OTR',po:'90163D010P',md:'5K45',pos:12},
-        {pn:'STRUT RR OTR RH',po:'93358A030P',md:'5F00',pos:13},
-        {pn:'STRUT RR OTR LH',po:'93359A040P',md:'5F00',pos:13},
-        {pn:'STRUT RR OTR RH',po:'93358A040P',md:'26MY',pos:14},
-        {pn:'STRUT RR OTR LH',po:'93359A050P',md:'26MY',pos:14},
-        {pn:'FLOOR RR RR',po:'74514D000P/D010P/D030P',md:'5K45',pos:15},
-      ]
-    }
+  /* View 2 สร้างจาก CF_ITEMS โดยตรง — ไม่ต้องดูแลข้อมูล 2 ชุดอีกต่อไป */
+  const SHELF_META = {
+    A:     { color:'#1a3a5c', theme:'theme-A' },
+    B:     { color:'#5c1a3a', theme:'theme-B' },
+    C:     { color:'#2c5a3a', theme:'theme-C' },
+    D:     { color:'#5a4a1a', theme:'theme-D' },
+    E:     { color:'#3a2c5a', theme:'theme-E' },
+    LineD: { color:'#b34700', theme:'theme-LineD', type:'linear', label:'ข้าง Line D' }
   };
+  const SHELVES = {};
+  Object.keys(SHELF_META).forEach(function(k){
+    SHELVES[k] = Object.assign({}, SHELF_META[k], {
+      items: (window.CF_ITEMS || []).filter(function(i){ return i.s === k; }).map(function(i){
+        return k === 'LineD'
+          ? { pn:i.pn, po:i.po, md:i.md, pos:i.pos }
+          : { pn:i.pn, po:i.po, md:i.md, lock:i.lk, level:i.lv };
+      })
+    });
+  });
 
   function getMaxLock(shelf) {
     let m = 0;
@@ -1034,7 +974,7 @@
         <div class="lookup-scroll"><table class="lookup-tbl">${lookupRows}</table></div>
       </div>
       <div class="grid-section">
-        <h3>📦 ผังพื้นที่ (เรียงจากใกล้ Line D บนสุด 1 → ล่างสุด 15)</h3>
+        <h3>📦 ผังพื้นที่ (เริ่มนับจากฝั่งไกล Line D — บนสุด 1 = ไกลสุด → ล่างสุด 15 = ติดเครื่อง Line D)</h3>
         <div class="lined-list">${rows}</div>
       </div>
       <div class="sign-footer">
@@ -1105,4 +1045,220 @@ document.querySelectorAll('.map-tab').forEach(function(btn){
     document.getElementById('map-' + btn.dataset.map).classList.add('active');
   });
 });
+
+/* =========================================================
+   VIEW 4 SCRIPT — เอาออก–เอาเข้า C/F   (backend = Google Apps Script + Google Sheet)
+   ========================================================= */
+(function(){
+  /* ▼▼▼ ใส่ลิงก์ Web App ของ Apps Script ที่นี่ (ดูคู่มือ SETUP-ยืมคืน.md) ▼▼▼ */
+  var LOAN_API = '';
+  /* ตัวอย่าง: 'https://script.google.com/macros/s/AKfycb..../exec'   ▲▲▲ */
+
+  var POLL_MS = 45000;     // ข้อ 4: หน้า "อยู่นอกชั้นวาง" รีเฟรชเองทุก 45 วิ
+  var FRESH_MS = 15000;    // ข้อ 1: ถ้าข้อมูลเก่ากว่านี้ ดึงใหม่ก่อนยืนยัน
+  var $ = function(s){ return document.querySelector(s); };
+  var esc = window.cfEsc, COLORS = window.CF_COLORS;
+
+  var LOAN = { now:null, out:[], byKey:{} };
+  var lastFetch = 0, poll = null, busy = false, dlgItem = null, dlgAction = null;
+
+  function p2(n){ return String(n).padStart(2,'0'); }
+  function fmtTime(iso){ var d = new Date(iso); return isNaN(d) ? '' : p2(d.getHours())+':'+p2(d.getMinutes()); }
+  function fmtDate(iso){ var d = new Date(iso); return isNaN(d) ? '' : d.getDate()+'/'+(d.getMonth()+1)+'/'+String(d.getFullYear()+543).slice(-2); }
+  function daysAgo(iso){
+    var d = new Date(iso); if (isNaN(d)) return '';
+    var n = Math.floor((Date.now() - d.getTime())/86400000);
+    return n <= 0 ? 'วันนี้' : ('ออกมา ' + n + ' วัน');
+  }
+
+  function setAsOf(state){
+    var el = $('#loanAsOf'); if (!el) return;
+    if (state === 'load'){ el.textContent = 'กำลังโหลด…'; return; }
+    if (state === 'err'){ el.textContent = '⚠️ เชื่อมต่อไม่ได้' + (LOAN.now ? ' · ข้อมูล ณ ' + fmtTime(LOAN.now) : ''); return; }
+    el.textContent = LOAN.now ? ('ข้อมูล ณ ' + fmtTime(LOAN.now)) : '—';
+  }
+
+  function loadLoan(opts){
+    opts = opts || {};
+    if (!LOAN_API){ if ($('#loanSetup')) $('#loanSetup').hidden = false; return Promise.resolve(); }
+    if (opts.spinner !== false) setAsOf('load');
+    var url = LOAN_API + (LOAN_API.indexOf('?') < 0 ? '?' : '&') + '_t=' + Date.now();
+    return fetch(url, { method:'GET' })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        LOAN.now = j.now || new Date().toISOString();
+        LOAN.out = Array.isArray(j.out) ? j.out : [];
+        LOAN.byKey = {};
+        LOAN.out.forEach(function(o){ LOAN.byKey[o.cf_key] = o; });
+        window.CF_STATUS = LOAN.byKey;
+        lastFetch = Date.now();
+        setAsOf('ok');
+        renderList(); renderOut();
+        if ($('#outCount')) $('#outCount').textContent = LOAN.out.length;
+        if (window.CF_refreshBoard) window.CF_refreshBoard();
+      })
+      .catch(function(){ setAsOf('err'); });
+  }
+
+  /* ---- รายการเลือกตัว ---- */
+  window.loanFilter = renderList;
+  function renderList(){
+    var box = $('#loanList'); if (!box) return;
+    var q = ($('#loanSearch').value || '').trim().toUpperCase();
+    var items = (window.CF_ITEMS || []).filter(function(i){
+      return !q || (i.md||'').toUpperCase().indexOf(q) >= 0 || i.pn.toUpperCase().indexOf(q) >= 0
+          || (i.po||'').toUpperCase().indexOf(q) >= 0 || window.cfLoc(i).toUpperCase().indexOf(q) >= 0;
+    });
+    items = items.slice().sort(function(a,b){ return window.cfLoc(a).localeCompare(window.cfLoc(b), undefined, {numeric:true}); });
+    var cap = 500, shown = items.slice(0, cap);
+    box.innerHTML = shown.map(function(i){
+      var k = window.cfKey(i), o = LOAN.byKey[k];
+      var st = o ? ('<span class="li-out">🔴 ' + esc(o.person) + '</span>')
+                 : '<span class="li-in">🟢 อยู่ในชั้นวาง</span>';
+      return '<button type="button" class="loan-item" data-key="' + encodeURIComponent(k) + '">'
+        + '<span class="li-loc mono" style="color:' + (COLORS[i.s]||'#222') + '">' + window.cfLoc(i) + '</span>'
+        + '<span class="li-mid"><span class="li-pn">' + esc(i.pn) + '</span>'
+        + '<span class="li-po mono">' + esc(i.po||'–') + ' · ' + esc(i.md||'–') + '</span></span>'
+        + st + '</button>';
+    }).join('') || '<div class="loan-empty">ไม่พบรายการ</div>';
+    if (items.length > cap) box.insertAdjacentHTML('beforeend',
+      '<div class="loan-empty">…แสดง ' + cap + ' จาก ' + items.length + ' รายการ · พิมพ์ค้นให้แคบลง</div>');
+  }
+
+  /* ---- หน้า "อยู่นอกชั้นวาง" ---- */
+  function renderOut(){
+    var box = $('#loanOutList'); if (!box) return;
+    if (!LOAN.out.length){ box.innerHTML = '<div class="loan-empty">ตอนนี้ไม่มี C/F อยู่นอกชั้นวาง</div>'; return; }
+    box.innerHTML = LOAN.out.map(function(o){
+      return '<div class="oo-card"><div class="oo-top">'
+        + '<span class="oo-loc mono">' + esc(o.loc || o.cf_key) + '</span>'
+        + '<span class="oo-days">' + daysAgo(o.since) + '</span></div>'
+        + '<div class="oo-pn">' + esc(o.part_name || '') + '</div>'
+        + '<div class="oo-meta"><span class="mono">' + esc(o.part_no||'–') + '</span> · ' + esc(o.model||'–') + '</div>'
+        + '<div class="oo-meta">เอาออกโดย <b>' + esc(o.person||'–') + '</b> · ' + fmtDate(o.since) + ' ' + fmtTime(o.since)
+        + (o.note ? (' · ' + esc(o.note)) : '') + '</div></div>';
+    }).join('');
+  }
+
+  /* ---- กล่องทำรายการ ---- */
+  function openDialog(key){
+    var item = (window.CF_ITEMS || []).find(function(i){ return window.cfKey(i) === key; });
+    if (!item) return;
+    dlgItem = item;
+    var o = LOAN.byKey[key];
+    dlgAction = o ? 'IN' : 'OUT';
+    $('#ldLoc').textContent = window.cfLoc(item);
+    $('#ldPn').textContent = item.pn;
+    $('#ldPo').textContent = (item.po||'–') + '  ·  ' + (item.md||'–');
+    var state = $('#ldState');
+    state.className = 'ld-state ' + (o ? 'is-out' : 'is-in');
+    state.textContent = o
+      ? ('🔴 อยู่นอกชั้นวาง — เอาออกโดย ' + o.person + ' (' + fmtDate(o.since) + ' ' + fmtTime(o.since) + ')')
+      : '🟢 อยู่ในชั้นวาง';
+    var go = $('#ldGo');
+    go.className = 'ld-go ' + (o ? 'is-in' : 'is-out');
+    go.textContent = o ? 'บันทึกเอาเข้า' : 'บันทึกเอาออก';
+    go.dataset.force = '';
+    go.disabled = false;
+    $('#ldMsg').hidden = true;
+    $('#ldNote').value = '';
+    try { $('#ldPerson').value = localStorage.getItem('cf_person') || ''; } catch(e){}
+    $('#loanDlgBg').hidden = false;
+    $('#ldPerson').focus();
+    if (Date.now() - lastFetch > FRESH_MS){
+      loadLoan({ spinner:false }).then(function(){
+        if (!$('#loanDlgBg').hidden && dlgItem === item){
+          var now = LOAN.byKey[key] ? 'IN' : 'OUT';
+          if (now !== dlgAction) openDialog(key);   // สถานะเปลี่ยนระหว่างเปิดกล่อง
+        }
+      });
+    }
+  }
+  function closeDialog(){ $('#loanDlgBg').hidden = true; dlgItem = null; }
+
+  function showMsg(text, offerForce){
+    var m = $('#ldMsg');
+    m.textContent = text; m.hidden = false;
+    if (offerForce){
+      var go = $('#ldGo');
+      go.textContent = dlgAction === 'IN' ? 'ยืนยันบันทึกเอาเข้า' : 'ยืนยันบันทึกเอาออกซ้ำ';
+      go.dataset.force = '1';
+    }
+  }
+
+  function submit(force){
+    if (!dlgItem || busy) return;
+    if (!LOAN_API){ showMsg('ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์บันทึก — ดูไฟล์ SETUP-ยืมคืน.md'); return; }
+    var person = $('#ldPerson').value.trim();
+    if (!person){ showMsg('กรุณาใส่ชื่อผู้ทำรายการ'); $('#ldPerson').focus(); return; }
+    try { localStorage.setItem('cf_person', person); } catch(e){}
+    busy = true; $('#ldGo').disabled = true;
+    var body = JSON.stringify({
+      action: dlgAction, force: !!force,
+      cf_key: window.cfKey(dlgItem), loc: window.cfLoc(dlgItem),
+      part_no: dlgItem.po || '', part_name: dlgItem.pn, model: dlgItem.md || '',
+      person: person, note: $('#ldNote').value.trim()
+    });
+    fetch(LOAN_API, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: body })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (j.ok){ closeDialog(); return loadLoan({ spinner:false }); }
+        if (j.code === 'ALREADY_OUT')
+          showMsg('ตัวนี้ถูกเอาออกโดย ' + (j.person||'?') + ' เมื่อ ' + fmtDate(j.since) + ' ' + fmtTime(j.since)
+                  + ' แล้ว — กด “ยืนยันบันทึกเอาออกซ้ำ” ถ้าต้องการบันทึกทับ', true);
+        else if (j.code === 'NOT_OUT')
+          showMsg('ระบบไม่พบว่าตัวนี้อยู่นอกชั้นวาง — กด “ยืนยันบันทึกเอาเข้า” ถ้าต้องการบันทึกเอาเข้า', true);
+        else if (j.code === 'NO_PERSON') showMsg('กรุณาใส่ชื่อผู้ทำรายการ');
+        else showMsg('บันทึกไม่สำเร็จ: ' + (j.message || j.code || 'unknown'));
+      })
+      .catch(function(){ showMsg('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — ลองใหม่อีกครั้ง'); })
+      .then(function(){ busy = false; if ($('#ldGo')) $('#ldGo').disabled = false; });
+  }
+
+  /* ---- ต่อสาย ---- */
+  function startPoll(){
+    stopPoll();
+    poll = setInterval(function(){
+      var v = document.getElementById('view-loan');
+      if (v && v.classList.contains('active') && !document.hidden) loadLoan({ spinner:false });
+    }, POLL_MS);
+  }
+  function stopPoll(){ if (poll){ clearInterval(poll); poll = null; } }
+
+  function init(){
+    if (!document.getElementById('view-loan')) return;
+    if (!LOAN_API && $('#loanSetup')) $('#loanSetup').hidden = false;
+
+    $('#loanList').addEventListener('click', function(e){
+      var b = e.target.closest('.loan-item');
+      if (b) openDialog(decodeURIComponent(b.dataset.key));
+    });
+    $('#loanRefresh').addEventListener('click', function(){ loadLoan(); });
+    $('#ldCancel').addEventListener('click', closeDialog);
+    $('#loanDlgBg').addEventListener('click', function(e){ if (e.target === $('#loanDlgBg')) closeDialog(); });
+    $('#ldGo').addEventListener('click', function(e){ submit(e.currentTarget.dataset.force === '1'); });
+    $('#ldPerson').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); $('#ldGo').click(); } });
+
+    document.querySelectorAll('.loan-tab').forEach(function(t){
+      t.addEventListener('click', function(){
+        document.querySelectorAll('.loan-tab').forEach(function(x){ x.classList.remove('active'); });
+        document.querySelectorAll('.loan-panel').forEach(function(x){ x.classList.remove('active'); });
+        t.classList.add('active');
+        document.getElementById('loan-' + t.dataset.loan).classList.add('active');
+        if (t.dataset.loan === 'out') loadLoan({ spinner:false });
+      });
+    });
+
+    var lt = document.getElementById('mtab-loan');
+    if (lt) lt.addEventListener('click', function(){ loadLoan(); startPoll(); });
+    document.querySelectorAll('.masterTab').forEach(function(b){
+      if (b.id !== 'mtab-loan') b.addEventListener('click', stopPoll);
+    });
+
+    renderList();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 </script>
